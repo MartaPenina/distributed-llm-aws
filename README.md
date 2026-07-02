@@ -1,1 +1,1 @@
-# SoftServe-Trainee
+# distributed-llm-aws
