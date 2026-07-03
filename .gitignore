@@ -1,0 +1,25 @@
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+*.tfvars.json
+override.tf
+crash.log
+
+# AWS credentials
+.aws/
+*.pem
+*.ppk
+
+# Environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Packer
+packer_cache/
+*.box
