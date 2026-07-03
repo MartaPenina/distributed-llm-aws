@@ -15,5 +15,5 @@ variable "ssh_public_key_path"  { type = string }
 variable "ami_id" {
   type        = string
   description = "AMI ID from Packer build — replace after Packer step"
-  default     = "ami-00cf59bc9978310fd" # Ubuntu 24.04 eu-central-1 placeholder
+  default = "ami-08ea642491f096f83" # Ubuntu 24.04 eu-central-1 placeholder
 }
