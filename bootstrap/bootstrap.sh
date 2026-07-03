@@ -3,7 +3,7 @@ set -e
 
 # ── Configuration ──────────────────────────────────────────
 IAM_USER="terraform-deployer"
-AWS_REGION="us-east-1"
+AWS_REGION="eu-central-1"
 PROFILE="distributed-llm-aws"
 
 # ── Check if user already exists ────────────────────────────
