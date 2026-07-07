@@ -17,3 +17,10 @@ variable "ami_id" {
   description = "AMI ID from Packer build — replace after Packer step"
   default = "ami-08ea642491f096f83" # Ubuntu 24.04 eu-central-1 placeholder
 }
+variable "bastion_ami_id" {
+  description = "Custom AMI ID from Packer build for Bastion Host"
+  type        = string
+}
+variable "bastion_instance_profile_name" {
+  type = string
+}

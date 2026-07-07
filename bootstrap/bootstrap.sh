@@ -81,8 +81,9 @@ cat > "$POLICY_FILE" <<'POLICY'
     {"Sid": "DynamoDB", "Effect": "Allow", "Action": ["dynamodb:GetItem","dynamodb:PutItem","dynamodb:DeleteItem","dynamodb:DescribeTable","dynamodb:CreateTable","dynamodb:DeleteTable"], "Resource": "*"},
     {"Sid": "CloudWatch", "Effect": "Allow", "Action": ["cloudwatch:PutMetricAlarm","cloudwatch:DeleteAlarms","cloudwatch:DescribeAlarms","cloudwatch:ListTagsForResource"], "Resource": "*"},
     {"Sid": "CloudWatchLogs", "Effect": "Allow", "Action": ["logs:CreateLogGroup","logs:DeleteLogGroup","logs:DescribeLogGroups","logs:PutRetentionPolicy","logs:TagLogGroup","logs:ListTagsForResource"], "Resource": "*"},
-    {"Sid": "IAMForInstances", "Effect": "Allow", "Action": ["iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:PassRole","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:ListAttachedRolePolicies","iam:CreateInstanceProfile","iam:DeleteInstanceProfile","iam:GetInstanceProfile","iam:AddRoleToInstanceProfile","iam:RemoveRoleFromInstanceProfile","iam:ListInstanceProfilesForRole","iam:TagRole","iam:ListRoleTags","iam:CreateServiceLinkedRole"], "Resource": "*"},
-    {"Sid": "SSM", "Effect": "Allow", "Action": ["ssm:PutParameter","ssm:GetParameter","ssm:GetParameters","ssm:DeleteParameter","ssm:DescribeParameters","ssm:AddTagsToResource","ssm:ListTagsForResource"], "Resource": "*"}
+    {"Sid": "IAMForUserSelf", "Effect": "Allow", "Action": ["iam:ListAttachedUserPolicies"], "Resource": "arn:aws:iam::*:user/terraform-sa"},
+    {"Sid": "SSM", "Effect": "Allow", "Action": ["ssm:PutParameter","ssm:GetParameter","ssm:GetParameters","ssm:DeleteParameter","ssm:DescribeParameters","ssm:AddTagsToResource","ssm:ListTagsForResource"], "Resource": "*"},
+    {"Sid": "IAMForInstances", "Effect": "Allow", "Action": ["iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:PassRole","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:ListAttachedRolePolicies","iam:CreateInstanceProfile","iam:DeleteInstanceProfile","iam:GetInstanceProfile","iam:AddRoleToInstanceProfile","iam:RemoveRoleFromInstanceProfile","iam:ListInstanceProfilesForRole","iam:TagRole","iam:ListRoleTags","iam:CreateServiceLinkedRole","iam:ListRolePolicies","iam:PutRolePolicy","iam:GetRolePolicy","iam:DeleteRolePolicy","iam:TagInstanceProfile"], "Resource": "*"}
   ]
 }
 POLICY

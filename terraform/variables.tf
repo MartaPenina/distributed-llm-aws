@@ -79,10 +79,9 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_ed25519.pub"
 }
 
-variable "my_ip" {
-  description = "Your public IP for Bastion SSH access (x.x.x.x/32)"
-  type        = string
-  sensitive   = true
+variable "bastion_allowed_cidrs" {
+  description = "SoftServe IP ranges + personal IP allowed for Bastion SSH access"
+  type        = list(string)
 }
 
 variable "db_name" {
@@ -104,4 +103,14 @@ variable "db_password" {
 variable "db_instance_class" {
   type    = string
   default = "db.t3.medium"
+}
+
+variable "ami_id" {
+  description = "Custom AMI ID from Packer build with Ollama pre-installed"
+  type        = string
+}
+
+variable "bastion_ami_id" {
+  description = "Custom AMI ID from Packer build for Bastion Host"
+  type        = string
 }

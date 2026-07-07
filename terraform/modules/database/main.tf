@@ -22,12 +22,13 @@ resource "aws_db_instance" "postgres" {
 
   multi_az               = false
   publicly_accessible    = false
-  skip_final_snapshot    = true
-  deletion_protection    = false
+  skip_final_snapshot       = false
+  final_snapshot_identifier = "${var.project_name}-${var.environment}-final-snapshot"
+  deletion_protection       = true
 
   tags = { Name = "${var.project_name}-${var.environment}-postgres" }
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }

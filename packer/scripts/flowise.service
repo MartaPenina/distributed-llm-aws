@@ -1,0 +1,28 @@
+# Systemd unit file: defines a service that automatically starts Flowise
+# (Docker container) on every Bastion boot, fetching the DB password
+# from AWS SSM Parameter Store instead of hardcoding it.
+
+[Unit]
+Description=Flowise Web UI
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/bin/docker rm -f flowise
+ExecStart=/bin/bash -c '\
+  DB_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/db_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  docker run -d --name flowise --restart always -p 3000:3000 \
+    -e DATABASE_TYPE=postgres \
+    -e DATABASE_HOST=distributed-llm-aws-dev-postgres.cd0iooomuaft.eu-central-1.rds.amazonaws.com \
+    -e DATABASE_PORT=5432 \
+    -e DATABASE_NAME=llmplatform \
+    -e DATABASE_USER=llmadmin \
+    -e DATABASE_PASSWORD="$DB_PASSWORD" \
+    -e DATABASE_SSL=true \
+    -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    flowiseai/flowise'
+
+[Install]
+WantedBy=multi-user.target

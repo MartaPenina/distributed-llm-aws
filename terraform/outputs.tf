@@ -12,3 +12,13 @@ output "asg_name" {
   description = "Auto Scaling Group name"
   value       = module.compute.asg_name
 }
+
+output "private_db_subnet_ids" {
+  description = "Private DB subnet IDs — used by the separate RDS Terraform project"
+  value       = module.networking.private_db_subnet_ids
+}
+
+output "rds_sg_id" {
+  description = "RDS security group ID — used by the separate RDS Terraform project"
+  value       = module.security.rds_sg_id
+}

@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "Installing SSM Agent..."
+sudo snap install amazon-ssm-agent --classic || true
+sudo snap start amazon-ssm-agent
+
 echo "Installing Docker..."
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker ubuntu
