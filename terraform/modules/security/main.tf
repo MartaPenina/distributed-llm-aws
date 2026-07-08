@@ -22,8 +22,8 @@ resource "aws_security_group" "alb" {
     from_port   = 11434
     to_port     = 11434
     protocol    = "tcp"
-    cidr_blocks = var.bastion_allowed_cidrs
-    description = "Ollama API access (for Flowise on Bastion)"
+    security_groups = [aws_security_group.bastion.id]
+    description     = "Ollama API from Bastion only (Flowise)"
   }
 
   egress {
@@ -80,6 +80,13 @@ resource "aws_security_group" "asg" {
     security_groups = [aws_security_group.alb.id]
     description     = "Ollama API from ALB"
   }
+  ingress {
+    from_port       = 11434
+    to_port         = 11434
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ollama_internal_alb.id]
+    description     = "Ollama API from internal ALB health checks"
+  }
 
   ingress {
     from_port       = 22
@@ -97,6 +104,30 @@ resource "aws_security_group" "asg" {
   }
 
   tags = { Name = "${var.project_name}-${var.environment}-asg-sg" }
+}
+
+# Security Group for internal Ollama ALB — allows health checks to ASG instances
+resource "aws_security_group" "ollama_internal_alb" {
+  name        = "${var.project_name}-${var.environment}-ollama-int-alb-sg"
+  description = "Internal ALB for Ollama - VPC only"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port       = 11434
+    to_port         = 11434
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+    description     = "Ollama API from Bastion (Flowise)"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-${var.environment}-ollama-int-alb-sg" }
 }
 
 # ── RDS Security Group ───────────────────────────────────────

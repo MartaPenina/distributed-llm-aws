@@ -28,3 +28,7 @@ variable "bastion_instance_profile_name" {
 variable "asg_instance_profile_name" {
   type = string
 }
+
+variable "ollama_internal_alb_sg_id" {
+  type = string
+}

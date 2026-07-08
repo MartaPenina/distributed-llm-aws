@@ -10,3 +10,7 @@ output "bastion_instance_profile_name" {
 output "asg_instance_profile_name" {
   value = aws_iam_instance_profile.asg.name
 }
+
+output "ollama_internal_alb_sg_id" {
+  value = aws_security_group.ollama_internal_alb.id
+}

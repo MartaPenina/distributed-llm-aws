@@ -22,3 +22,8 @@ output "rds_sg_id" {
   description = "RDS security group ID — used by the separate RDS Terraform project"
   value       = module.security.rds_sg_id
 }
+
+output "ollama_internal_alb_dns" {
+  description = "Internal ALB DNS for Flowise→Ollama communication within VPC"
+  value       = module.compute.ollama_internal_alb_dns
+}

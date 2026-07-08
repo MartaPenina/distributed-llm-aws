@@ -39,5 +39,6 @@ module "compute" {
   bastion_ami_id                = var.bastion_ami_id
   bastion_instance_profile_name = module.security.bastion_instance_profile_name
   asg_instance_profile_name     = module.security.asg_instance_profile_name
+  ollama_internal_alb_sg_id = module.security.ollama_internal_alb_sg_id
 }
 

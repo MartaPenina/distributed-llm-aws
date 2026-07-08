@@ -90,6 +90,50 @@ resource "aws_lb_listener" "ollama" {
   }
 }
 
+# Internal ALB for Ollama — routes traffic within VPC only, no public IP
+resource "aws_lb" "ollama_internal" {
+  name               = "${var.environment}-ollama-internal-alb"
+  internal           = true
+  load_balancer_type = "application"
+  security_groups = [var.ollama_internal_alb_sg_id]
+  subnets            = var.private_app_subnet_ids
+
+  # LLM inference can take 60-120s — increase idle timeout to prevent disconnects
+  idle_timeout = 300
+
+  tags = { Name = "${var.project_name}-${var.environment}-ollama-internal-alb" }
+}
+
+# Target group for Ollama on internal ALB
+resource "aws_lb_target_group" "ollama_internal" {
+  name     = "${var.environment}-ollama-int-tg"
+  port     = 11434
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    path                = "/"
+    port                = "11434"
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    interval            = 30
+  }
+
+  tags = { Name = "${var.project_name}-${var.environment}-ollama-internal-tg" }
+}
+
+# Listener on internal ALB — port 11434
+resource "aws_lb_listener" "ollama_internal" {
+  load_balancer_arn = aws_lb.ollama_internal.arn
+  port              = 11434
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ollama_internal.arn
+  }
+}
+
 # ── Launch Template ──────────────────────────────────────────
 resource "aws_launch_template" "main" {
   name_prefix   = "${var.project_name}-${var.environment}-lt-"
@@ -130,7 +174,11 @@ resource "aws_autoscaling_group" "main" {
     version = "$Latest"
   }
 
-  target_group_arns = [aws_lb_target_group.main.arn, aws_lb_target_group.ollama.arn]
+  target_group_arns = [
+    aws_lb_target_group.main.arn,
+    aws_lb_target_group.ollama.arn,
+    aws_lb_target_group.ollama_internal.arn
+  ]
 
   health_check_type         = "ELB"
   health_check_grace_period = 300

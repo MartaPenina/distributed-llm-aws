@@ -9,3 +9,7 @@ output "alb_dns_name" {
 output "asg_name" {
   value = aws_autoscaling_group.main.name
 }
+
+output "ollama_internal_alb_dns" {
+  value = aws_lb.ollama_internal.dns_name
+}
