@@ -24,3 +24,7 @@ variable "bastion_ami_id" {
 variable "bastion_instance_profile_name" {
   type = string
 }
+
+variable "asg_instance_profile_name" {
+  type = string
+}

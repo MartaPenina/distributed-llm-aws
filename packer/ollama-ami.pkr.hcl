@@ -1,3 +1,6 @@
+# Packer template: builds a custom AWS AMI with Ollama + llama3.1:8b pre-installed,
+# so ASG instances start ready to serve LLM requests without downloading the model on every launch.
+
 packer {
   required_plugins {
     amazon = {

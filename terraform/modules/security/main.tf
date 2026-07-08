@@ -150,7 +150,37 @@ resource "aws_iam_role_policy" "bastion_ssm" {
   })
 }
 
+# SSM Session Manager access for Bastion (in addition to existing GetParameter policy)
+resource "aws_iam_role_policy_attachment" "bastion_ssm_core" {
+  role       = aws_iam_role.bastion.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "bastion" {
   name = "${var.project_name}-${var.environment}-bastion-profile"
   role = aws_iam_role.bastion.name
+}
+
+# ── IAM for ASG instances ─────────────────────────────────────
+resource "aws_iam_role" "asg" {
+  name = "${var.project_name}-${var.environment}-asg-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+# AWS managed policy covers all SSM requirements (maintained by AWS)
+resource "aws_iam_role_policy_attachment" "asg_ssm" {
+  role       = aws_iam_role.asg.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "asg" {
+  name = "${var.project_name}-${var.environment}-asg-profile"
+  role = aws_iam_role.asg.name
 }

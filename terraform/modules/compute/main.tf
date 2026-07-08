@@ -99,6 +99,11 @@ resource "aws_launch_template" "main" {
 
   vpc_security_group_ids = [var.asg_sg_id]
 
+  # IAM profile for SSM Session Manager access on LLM instances
+  iam_instance_profile {
+    name = var.asg_instance_profile_name
+  }
+
   user_data = base64encode(<<-EOF
     #!/bin/bash
     systemctl start ollama
