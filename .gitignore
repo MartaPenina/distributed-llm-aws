@@ -23,3 +23,5 @@ Thumbs.db
 # Packer
 packer_cache/
 *.box
+
+*.useful.commands.mduseful_commands.md

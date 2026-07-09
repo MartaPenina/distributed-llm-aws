@@ -13,13 +13,7 @@ curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker ubuntu
 
 echo "Starting Ollama container (v0.3.6)..."
-sudo docker run -d \
-  --name ollama \
-  --restart always \
-  -p 11434:11434 \
-  -e OLLAMA_HOST=0.0.0.0 \
-  -v ollama:/root/.ollama \
-  ollama/ollama:0.3.6
+sudo docker run -d --name ollama --restart always -p 11434:11434 -e OLLAMA_HOST=0.0.0.0 -v ollama:/root/.ollama ollama/ollama:0.3.6
 
 echo "Waiting for Ollama to start..."
 sleep 15

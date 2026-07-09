@@ -66,6 +66,33 @@ resource "aws_lb_target_group" "ollama" {
   tags = { Name = "${var.project_name}-${var.environment}-ollama-tg" }
 }
 
+
+# Target group for Ollama on internal ALB
+resource "aws_lb_target_group" "ollama_internal" {
+  name     = "${var.environment}-ollama-int-tg"
+  port     = 11434
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    path                = "/"
+    port                = "11434"
+    healthy_threshold   = 2
+    unhealthy_threshold = 10
+    interval            = 30
+    timeout             = 25
+
+  }
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 3600
+    enabled         = true
+  }
+
+  tags = { Name = "${var.project_name}-${var.environment}-ollama-internal-tg" }
+}
+
 # ── ALB Listener ─────────────────────────────────────────────
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
@@ -102,24 +129,6 @@ resource "aws_lb" "ollama_internal" {
   idle_timeout = 300
 
   tags = { Name = "${var.project_name}-${var.environment}-ollama-internal-alb" }
-}
-
-# Target group for Ollama on internal ALB
-resource "aws_lb_target_group" "ollama_internal" {
-  name     = "${var.environment}-ollama-int-tg"
-  port     = 11434
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/"
-    port                = "11434"
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    interval            = 30
-  }
-
-  tags = { Name = "${var.project_name}-${var.environment}-ollama-internal-tg" }
 }
 
 # Listener on internal ALB — port 11434
@@ -181,7 +190,7 @@ resource "aws_autoscaling_group" "main" {
   ]
 
   health_check_type         = "ELB"
-  health_check_grace_period = 300
+  health_check_grace_period = 600
 
   tag {
     key                 = "Name"
