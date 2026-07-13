@@ -20,7 +20,10 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip -q awscliv2.zip
 sudo ./aws/install
 
-echo "Setting up Flowise systemd service..."
-sudo cp /tmp/flowise.service /etc/systemd/system/flowise.service
+echo "Installing PostgreSQL client..."
+sudo apt install -y postgresql-client
+
+echo "Setting up AnythingLLM systemd service..."
+sudo cp /tmp/anythingllm.service /etc/systemd/system/anythingllm.service
 sudo systemctl daemon-reload
-sudo systemctl enable flowise.service
+sudo systemctl enable anythingllm.service

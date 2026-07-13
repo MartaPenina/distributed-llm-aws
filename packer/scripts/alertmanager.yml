@@ -1,0 +1,17 @@
+# Alertmanager config: routes alerts to Slack.
+# PLACEHOLDER: replace <SLACK_WEBHOOK_URL> when Point 2 (Alerting System)
+# is actually being built — not yet, this is just scaffolding.
+ 
+route:
+  receiver: "slack-notifications"
+  group_by: ["alertname"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+ 
+receivers:
+  - name: "slack-notifications"
+    slack_configs:
+      - api_url: "<SLACK_WEBHOOK_URL>"
+        channel: "#alerts"
+        send_resolved: true

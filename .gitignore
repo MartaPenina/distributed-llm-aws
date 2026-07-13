@@ -25,3 +25,4 @@ packer_cache/
 *.box
 
 *.useful.commands.mduseful_commands.md
+docs/

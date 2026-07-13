@@ -33,6 +33,14 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Flowise Web UI via ALB"
+  }
+
   tags = { Name = "${var.project_name}-${var.environment}-alb-sg" }
 }
 
@@ -49,14 +57,6 @@ resource "aws_security_group" "bastion" {
     cidr_blocks = var.bastion_allowed_cidrs
   }
 
- ingress {
-  from_port   = 3000
-  to_port     = 3000
-  protocol    = "tcp"
-  cidr_blocks = var.bastion_allowed_cidrs
-  description = "Flowise Web UI access"
-}
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -65,6 +65,16 @@ resource "aws_security_group" "bastion" {
   }
 
   tags = { Name = "${var.project_name}-${var.environment}-bastion-sg" }
+}
+
+resource "aws_security_group_rule" "bastion_from_alb_3000" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.bastion.id
+  source_security_group_id = aws_security_group.alb.id
+  description               = "Flowise Web UI via ALB"
 }
 
 # ── ASG Security Group ───────────────────────────────────────

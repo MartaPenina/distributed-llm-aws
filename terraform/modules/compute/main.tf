@@ -35,19 +35,26 @@ resource "aws_lb_target_group" "main" {
   vpc_id   = var.vpc_id
 
   health_check {
-    path                = "/api/v1/health"
+    path                = "/"
     port                = "3000"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 10
+    unhealthy_threshold = 10
+    timeout             = 25
     interval            = 30
   }
 
   tags = { Name = "${var.project_name}-${var.environment}-tg" }
 }
 
+# Registers bastion (where Flowise runs) as the target for the Flowise Target Group.
+# Bastion is a single standalone instance (not ASG), so it needs manual attachment.
+resource "aws_lb_target_group_attachment" "bastion_flowise" {
+  target_group_arn = aws_lb_target_group.main.arn
+  target_id        = aws_instance.bastion.id
+  port              = 3000
+}
+
 # Separate Target Group for Ollama API (port 11434) — LLM instances,
-# not the same as Flowise's target group (port 3000).
 resource "aws_lb_target_group" "ollama" {
   name     = "${var.environment}-ollama-tg"
   port     = 11434
@@ -58,8 +65,8 @@ resource "aws_lb_target_group" "ollama" {
     path                = "/"
     port                = "11434"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 10
+    unhealthy_threshold = 10
+    timeout             = 25
     interval            = 30
   }
 
@@ -184,7 +191,6 @@ resource "aws_autoscaling_group" "main" {
   }
 
   target_group_arns = [
-    aws_lb_target_group.main.arn,
     aws_lb_target_group.ollama.arn,
     aws_lb_target_group.ollama_internal.arn
   ]

@@ -44,12 +44,12 @@ source "amazon-ebs" "bastion" {
 build {
   sources = ["source.amazon-ebs.bastion"]
 
-  # Copies flowise.service from local disk to the temp instance's /tmp,
+  # Copies anithingllm.service from local disk to the temp instance's /tmp,
   # so install-bastion.sh can move it into /etc/systemd/system/ afterward.
   provisioner "file" {
-    source      = "${path.root}/scripts/flowise.service"
-    destination = "/tmp/flowise.service"
-  }
+  source      = "${path.root}/scripts/anythingllm.service"
+  destination = "/tmp/anythingllm.service"
+}
 
   provisioner "shell" {
     script = "${path.root}/scripts/install-bastion.sh"

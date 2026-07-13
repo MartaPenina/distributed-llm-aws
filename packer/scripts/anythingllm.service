@@ -1,0 +1,26 @@
+# Systemd unit file: defines a service that automatically starts AnythingLLM
+# (Docker container, :pg image variant) on every Bastion boot, fetching the
+# DB password from AWS SSM Parameter Store instead of hardcoding it.
+# AnythingLLM stores all state (chat history + vectors) in the same
+# PostgreSQL RDS instance used across this project, via pgvector.
+
+[Unit]
+Description=AnythingLLM Web UI
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/bin/docker rm -f anythingllm
+ExecStart=/bin/bash -c '\
+  DB_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/db_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  PGPASSWORD="$DB_PASSWORD" psql -h distributed-llm-aws-dev-postgres.cd0iooomuaft.eu-central-1.rds.amazonaws.com -p 5432 -U llmadmin -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '"'"'anythingllm_db'"'"'" | grep -q 1 || PGPASSWORD="$DB_PASSWORD" psql -h distributed-llm-aws-dev-postgres.cd0iooomuaft.eu-central-1.rds.amazonaws.com -p 5432 -U llmadmin -d postgres -c "CREATE DATABASE anythingllm_db;" && \
+  docker run -d --name anythingllm --restart always -p 3000:3001 \
+    -e DATABASE_URL="postgresql://llmadmin:$DB_PASSWORD@distributed-llm-aws-dev-postgres.cd0iooomuaft.eu-central-1.rds.amazonaws.com:5432/anythingllm_db" \
+    -e STORAGE_DIR="/app/server/storage" \
+    -v anythingllm_storage:/app/server/storage \
+    mintplexlabs/anythingllm:pg'
+
+[Install]
+WantedBy=multi-user.target
