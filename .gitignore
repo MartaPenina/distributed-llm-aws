@@ -26,3 +26,4 @@ packer_cache/
 
 *.useful.commands.mduseful_commands.md
 docs/
+local-testing/
