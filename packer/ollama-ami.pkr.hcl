@@ -1,5 +1,6 @@
-# Packer template: builds a custom AWS AMI with Ollama + llama3.1:8b pre-installed,
-# so ASG instances start ready to serve LLM requests without downloading the model on every launch.
+# Packer template: builds a custom AWS AMI with Ollama + qwen2.5:3b pre-installed,
+# plus node_exporter + Grafana Agent for metrics collection, so ASG instances
+# start ready to serve LLM requests and report metrics without manual setup.
 
 packer {
   required_plugins {
@@ -30,7 +31,7 @@ source "amazon-ebs" "ollama" {
   ssh_username  = "ubuntu"
 
   ami_name        = "distributed-llm-aws-ollama-{{timestamp}}"
-  ami_description = "Ubuntu 24.04 with Ollama + llama3.1:8b"
+  ami_description = "Ubuntu 24.04 with Ollama + qwen2.5:3b + Grafana Agent"
 
   launch_block_device_mappings {
     device_name           = "/dev/sda1"
@@ -47,6 +48,11 @@ source "amazon-ebs" "ollama" {
 
 build {
   sources = ["source.amazon-ebs.ollama"]
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-agent.yaml"
+    destination = "/tmp/grafana-agent.yaml"
+  }
 
   provisioner "shell" {
     script = "${path.root}/scripts/install-ollama.sh"

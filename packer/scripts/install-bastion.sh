@@ -27,3 +27,22 @@ echo "Setting up AnythingLLM systemd service..."
 sudo cp /tmp/anythingllm.service /etc/systemd/system/anythingllm.service
 sudo systemctl daemon-reload
 sudo systemctl enable anythingllm.service
+
+echo "Setting up Prometheus config..."
+sudo mkdir -p /etc/prometheus
+sudo cp /tmp/prometheus.yml /etc/prometheus/prometheus.yml
+
+echo "Starting Prometheus (with remote-write receiver enabled for Grafana Agent)..."
+sudo docker run -d --name prometheus --restart always -p 9090:9090 \
+  -v /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus --config.file=/etc/prometheus/prometheus.yml \
+  --web.enable-remote-write-receiver
+
+echo "Setting up Grafana provisioning (Prometheus data source)..."
+sudo mkdir -p /tmp/grafana-provisioning/datasources
+sudo cp /tmp/grafana-datasource.yaml /tmp/grafana-provisioning/datasources/prometheus.yaml
+
+echo "Starting Grafana (host port 3001, since 3000 is taken by AnythingLLM)..."
+sudo docker run -d --name grafana --restart always -p 3001:3000 \
+  -v /tmp/grafana-provisioning:/etc/grafana/provisioning \
+  grafana/grafana

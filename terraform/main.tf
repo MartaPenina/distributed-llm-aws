@@ -42,3 +42,10 @@ module "compute" {
   ollama_internal_alb_sg_id = module.security.ollama_internal_alb_sg_id
 }
 
+module "monitoring" {
+  source = "./modules/monitoring"
+  project_name = var.project_name
+  environment  = var.environment
+  alert_email  = var.alert_email
+  asg_name     = module.compute.asg_name
+}

@@ -25,10 +25,31 @@ sleep 15
 echo "Pulling qwen2.5:3b model..."
 sudo docker exec ollama ollama pull qwen2.5:3b
 
-# Grafana Agent collects local metrics (CPU, RAM, disk, network) and
-# forwards them to Prometheus on the monitoring host. Placeholder
-# remote_write URL — update once the monitoring host's private IP/DNS
-# is known (after its own Terraform module + AMI are done).
+# node_exporter exposes this host's CPU/RAM/disk metrics on :9100 —
+# Grafana Agent (installed below) reads from it and forwards to Prometheus.
+echo "Installing node_exporter (system metrics source for Grafana Agent)..."
+NODE_EXPORTER_VERSION="1.8.2"
+wget -q https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+tar xzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+sudo mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter /usr/local/bin/
+rm -rf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64*
+
+sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'SVC'
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/node_exporter
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+SVC
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now node_exporter
+
 echo "Installing Grafana Agent..."
 sudo apt-get update
 sudo apt-get install -y gpg
@@ -37,5 +58,9 @@ wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt
 echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
 sudo apt-get update
 sudo apt-get install -y grafana-agent
+
+echo "Configuring and starting Grafana Agent..."
+sudo cp /tmp/grafana-agent.yaml /etc/grafana-agent.yaml
+sudo systemctl enable --now grafana-agent
 
 echo "Done!"

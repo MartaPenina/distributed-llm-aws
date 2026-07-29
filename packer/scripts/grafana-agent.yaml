@@ -1,12 +1,10 @@
 # Grafana Agent config: scrapes this instance's own metrics (via node_exporter
-# on localhost:9100) and forwards them to Prometheus on the monitoring host.
-# PLACEHOLDER: replace <MONITORING_HOST_PRIVATE_IP> once the monitoring host
-# exists (after its Terraform module + AMI are built) — this can't be filled
-# in yet since that host doesn't exist.
- 
+# on localhost:9100) and forwards them to Prometheus on the bastion host
+# (10.0.0.5 — stable private IP, fixed via Terraform private_ip attribute).
+
 server:
   log_level: info
- 
+
 metrics:
   global:
     scrape_interval: 15s
@@ -19,4 +17,4 @@ metrics:
               labels:
                 instance: "${HOSTNAME}"
       remote_write:
-        - url: "http://<MONITORING_HOST_PRIVATE_IP>:9090/api/v1/write"
+        - url: "http://10.0.0.5:9090/api/v1/write"

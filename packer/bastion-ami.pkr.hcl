@@ -29,7 +29,7 @@ source "amazon-ebs" "bastion" {
 
   launch_block_device_mappings {
     device_name           = "/dev/sda1"
-    volume_size           = 10
+    volume_size           = 25
     volume_type           = "gp3"
     delete_on_termination = true
   }
@@ -44,12 +44,20 @@ source "amazon-ebs" "bastion" {
 build {
   sources = ["source.amazon-ebs.bastion"]
 
-  # Copies anithingllm.service from local disk to the temp instance's /tmp,
-  # so install-bastion.sh can move it into /etc/systemd/system/ afterward.
   provisioner "file" {
-  source      = "${path.root}/scripts/anythingllm.service"
-  destination = "/tmp/anythingllm.service"
-}
+    source      = "${path.root}/scripts/anythingllm.service"
+    destination = "/tmp/anythingllm.service"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/prometheus.yml"
+    destination = "/tmp/prometheus.yml"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-datasource.yaml"
+    destination = "/tmp/grafana-datasource.yaml"
+  }
 
   provisioner "shell" {
     script = "${path.root}/scripts/install-bastion.sh"

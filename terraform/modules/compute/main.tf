@@ -12,8 +12,14 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids      = [var.bastion_sg_id]
   key_name                    = aws_key_pair.main.key_name
   associate_public_ip_address = true
+  private_ip                  = "10.0.0.5"
   tags = { Name = "bastion" }
   iam_instance_profile = var.bastion_instance_profile_name
+}
+
+resource "aws_eip" "bastion" {
+  instance = aws_instance.bastion.id
+  domain   = "vpc"
 }
 
 # ── ALB ──────────────────────────────────────────────────────
@@ -52,6 +58,31 @@ resource "aws_lb_target_group_attachment" "bastion_flowise" {
   target_group_arn = aws_lb_target_group.main.arn
   target_id        = aws_instance.bastion.id
   port              = 3000
+}
+
+# Target Group for Grafana (port 3001) — bastion, same pattern as AnythingLLM
+resource "aws_lb_target_group" "grafana" {
+  name     = "${var.environment}-grafana-tg"
+  port     = 3001
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    path                = "/api/health"
+    port                = "3001"
+    healthy_threshold   = 2
+    unhealthy_threshold = 10
+    timeout             = 25
+    interval            = 30
+  }
+
+  tags = { Name = "${var.project_name}-${var.environment}-grafana-tg" }
+}
+
+resource "aws_lb_target_group_attachment" "bastion_grafana" {
+  target_group_arn = aws_lb_target_group.grafana.arn
+  target_id        = aws_instance.bastion.id
+  port              = 3001
 }
 
 # Separate Target Group for Ollama API (port 11434) — LLM instances,
@@ -121,6 +152,18 @@ resource "aws_lb_listener" "ollama" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.ollama.arn
+  }
+}
+
+# Listener — routes external port 3001 traffic (Grafana) to bastion
+resource "aws_lb_listener" "grafana" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 3001
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana.arn
   }
 }
 

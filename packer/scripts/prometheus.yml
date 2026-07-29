@@ -1,24 +1,16 @@
-# Prometheus scrape config for the monitoring host.
-# PLACEHOLDER targets for llm1/llm2 — ASG instances have dynamic IPs, so this
-# will likely need to move to EC2 service discovery (or Grafana Agent
-# remote_write, which pushes instead of Prometheus pulling) once that part
-# of the setup is built. Kept simple for now.
- 
+# Prometheus config for the bastion host (runs alongside AnythingLLM,
+# no separate monitoring host). Receives metrics from Grafana Agent
+# (LLM1/LLM2) via remote_write.
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
- 
+
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
- 
+
   - job_name: "alertmanager"
     static_configs:
       - targets: ["localhost:9093"]
- 
-  # Receives metrics pushed by Grafana Agent (remote_write) from bastion
-  # and ASG LLM instances — no static_configs needed for this job, it's
-  # the write receiver, enabled via --web.enable-remote-write-receiver
-  # flag on the Prometheus container (to add in install-monitoring.sh).
- 

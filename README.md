@@ -1,116 +1,47 @@
-# distributed-llm-aws
+# Task 2 — Monitoring & Alerting — Status (updated after break)
 
-## Overview
-Secure, scalable AWS infrastructure for running a self-hosted LLM platform
-using Ollama with auto-scaling capabilities, connected to PostgreSQL vector database,
-accessible via Flowise Web UI.
+## Context
+Infrastructure was destroyed (`terraform destroy`) to save costs.
+First step now is `terraform apply`, verify baseline functionality (Web UI, Ollama, bastion monitoring),
+and only then continue with the points below.
 
-## Architecture
+## Mentor's latest comments (current, relevant)
+- Only bastion is connected to Grafana/Prometheus — LLM1/LLM2 are not sending metrics.
+- Need to install something on the LLM hosts that lets them communicate with Prometheus/Grafana on bastion.
+- Understand how Grafana data sources connect (conceptually).
+- Everything should be provisioned as code (datasources, dashboards) — so that on every redeploy
+  (3 servers x 5 metrics) nothing needs to be clicked manually.
+- Add CloudWatch Agent into Packer (bastion/monitoring host).
+- Alerts — via Terraform (aws_cloudwatch_metric_alarm), not through the console.
+- Finish points 1, 2, 3, 4; point 5 is already done; point 6 - skip;
+  points 7, 8 - finish to completion.
 
-```
-User (Browser)
-      │
-      ▼
-Internet Gateway ──▶ ALB (Load Balancer)
-                          │
-                ┌─────────┴─────────┐
-                ▼                   ▼
-    AZ1: Private Subnet     AZ2: Private Subnet
-    └── EC2 (ASG)           └── EC2 (ASG)
-         └── Ollama               └── Ollama
-         └── Flowise              └── Flowise
-                │                       │
-                └──────────┬────────────┘
-                           ▼
-                  DB Private Subnet
-                  └── RDS PostgreSQL + pgvector
+## Status by task point
 
-Public Subnets:
-├── Bastion Host (AZ1) ← only SSH entry point
-└── NAT Gateway (AZ2)  ← outbound internet for private instances
-```
+| # | Point | Status | Done | Remaining |
+|---|-------|--------|------|-----------|
+| 1 | Monitoring Infrastructure | Partial | Prometheus + Grafana alive on bastion, connected as data source | Grafana Agent on LLM1/LLM2; CloudWatch for DB/ALB; SNS - verify live |
+| 2 | Alerting (Grafana Alert Rules, Alertmanager, Slack) | Not started | - | Everything: Alert Rule Evaluation Engine, Alertmanager routing, Slack integration |
+| 3 | Metrics Collection | Partial | LLM host metrics partial (only bastion sees itself) | Agent on LLM1/LLM2; PostgreSQL metrics; ALB metrics (4xx/5xx/host count) |
+| 4 | Dashboards | Not started | - | Host status dashboard; Service status dashboard (both - provisioning-as-code) |
+| 5 | Web UI (Ollama) | Done | AnythingLLM + Ollama 0.3.6 + qwen2.5:3b, stable on both LLM hosts, via ALB | - |
+| 6 | CI/CD | Skipped per mentor's instruction | - | - |
+| 7 | Security | Partial | SG drift fixed, basic IAM in place | Final least-privilege review after redeploy; IAM role for CloudWatch Agent |
+| 8 | AMI Creation | Almost done | Packer: bastion AMI (AnythingLLM+Prometheus+Grafana) and LLM AMI (qwen2.5:3b) rebuilt | Add CloudWatch Agent install into packer scripts for monitoring host |
+| - | 13 CloudWatch/Grafana alerts from the list | Not started | 2 EC2 alarms exist (high/low CPU) - check whether they're in Terraform or created manually | Remaining 11 alarms; all - via Terraform |
 
-## Tech Stack
+## Next steps (order)
+1. `terraform plan` -> cross-check AMI ID against the latest Packer build -> `terraform apply`.
+2. Verify baseline state via SSM: Ollama, Web UI, bastion Grafana/Prometheus.
+3. Decide and document the metrics-collection architecture from the LLM hosts (pull vs push) -
+   align with existing SG rules for private subnets.
+4. Install/configure the agent on LLM1/LLM2, confirm it shows up in Prometheus (`up{job="node_exporter"}`).
+5. Move Grafana datasources and dashboards to provisioning-as-code.
+6. Add CloudWatch Agent into Packer + check IAM role/instance profile.
+7. Move the existing 2 alarms (if created manually) into Terraform, add the remaining 11 + Grafana/Alertmanager/Slack.
+8. Final review of Security (7) and AMI (8), close out the task.
 
-| Tool | Purpose |
-|------|---------|
-| Terraform | Infrastructure as Code |
-| Ansible | Configuration management |
-| Packer | Custom AMI with Ollama pre-installed |
-| Ollama | Local LLM server (llama3.1:8b) |
-| Flowise | Web UI with PostgreSQL support |
-| AWS ASG | Auto Scaling across 2 Availability Zones |
-| AWS RDS | PostgreSQL with pgvector extension |
-| AWS ALB | Load balancing between LLM instances |
-
-## Project Structure
-
-```
-distributed-llm-aws/
-├── bootstrap/           # IAM service account setup (run once)
-│   └── bootstrap.sh
-├── terraform/           # Infrastructure as Code
-│   ├── modules/
-│   │   ├── networking/  # VPC, subnets, IGW, NAT
-│   │   ├── security/    # Security Groups
-│   │   ├── compute/     # ASG, Launch Template, ALB
-│   │   └── database/    # RDS PostgreSQL
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── versions.tf
-├── packer/              # Custom AMI with Ollama + llama3.1:8b
-│   ├── ollama-ami.pkr.hcl
-│   └── scripts/
-│       └── install-ollama.sh
-├── ansible/             # Server configuration
-│   ├── roles/
-│   │   ├── ollama/
-│   │   └── flowise/
-│   └── playbook.yml
-└── docs/                # Architecture and documentation
-```
-
-## Quick Start
-
-```bash
-# 1. Run bootstrap — creates IAM service account (run once from root)
-cd bootstrap && ./bootstrap.sh
-
-# 2. Deploy infrastructure
-cd terraform
-terraform init
-terraform plan
-terraform apply
-
-# 3. Configure servers
-cd ansible
-ansible-playbook playbook.yml
-```
-
-## Security Principles
-
-- No credentials in Git — ever
-- Bastion is the only public SSH entry point
-- LLM instances in private subnets — not accessible from internet
-- RDS accessible only from ASG Security Group on port 5432
-- NAT Gateway for outbound internet from private instances
-- All secrets via environment variables or AWS Secrets Manager
-
-## Prerequisites
-
-- AWS Account with IAM access
-- Terraform >= 1.15
-- Ansible >= 2.15
-- Packer >= 1.10
-- AWS CLI v2
-
-## Key Design Decisions
-
-**Why Ollama:** Open-source LLM server, runs llama3.1:8b locally without cloud API costs.
-
-**Why Packer:** Pre-baking 4.9GB model into AMI avoids expensive NAT Gateway data transfer on every ASG scale-out event.
-
-**Why Flowise:** 54k GitHub stars, native PostgreSQL support, Ollama integration, visual agent builder — not a basic chat UI.
-
-**Why RDS separately:** Database lifecycle is independent from compute. Can stop/start RDS without destroying Terraform state.
+## Open questions (need verification/decision)
+- SNS subscription: confirmed or not - sources conflict, verify live after apply.
+- Whether an IAM instance profile for CloudWatch Agent already exists, or needs to be created from scratch.
+- Metrics collection model for LLM hosts: bastion Prometheus scrape (pull) vs Grafana Agent remote_write (push).

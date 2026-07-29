@@ -114,3 +114,8 @@ variable "bastion_ami_id" {
   description = "Custom AMI ID from Packer build for Bastion Host"
   type        = string
 }
+
+variable "alert_email" {
+  type        = string
+  description = "Email address to receive CloudWatch/Grafana alert notifications"
+}
