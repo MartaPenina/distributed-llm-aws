@@ -8,3 +8,7 @@ output "rds_db_name" {
   description = "Database name"
   value       = module.database.db_name
 }
+
+output "db_instance_id" {
+  value = module.database.db_instance_id
+}

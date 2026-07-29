@@ -31,3 +31,18 @@ variable "cloudwatch_alarms" {
   }))
   default = {}
 }
+
+variable "db_instance_id" {
+  description = "RDS instance identifier for CloudWatch alarm dimensions"
+  type        = string
+}
+
+variable "alb_arn_suffix" {
+  description = "ALB arn_suffix for CloudWatch alarm dimensions"
+  type        = string
+}
+
+variable "target_group_arn_suffix" {
+  description = "Target group arn_suffix for CloudWatch alarm dimensions"
+  type        = string
+}

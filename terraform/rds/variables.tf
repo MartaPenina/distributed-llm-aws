@@ -17,8 +17,3 @@ variable "db_password" {
   sensitive = true
 }
 variable "db_instance_class" { type = string }
-
-variable "alert_email" {
-  type        = string
-  description = "Email address to receive CloudWatch/Grafana alert notifications"
-}

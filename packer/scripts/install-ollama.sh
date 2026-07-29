@@ -61,6 +61,7 @@ sudo apt-get install -y grafana-agent
 
 echo "Configuring and starting Grafana Agent..."
 sudo cp /tmp/grafana-agent.yaml /etc/grafana-agent.yaml
+echo 'CUSTOM_ARGS="-config.expand-env"' | sudo tee -a /etc/default/grafana-agent
 sudo systemctl enable --now grafana-agent
 
 echo "Done!"
