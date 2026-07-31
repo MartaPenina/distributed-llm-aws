@@ -54,6 +54,11 @@ build {
     destination = "/tmp/grafana-agent.yaml"
   }
 
+  provisioner "file" {
+    source      = "${path.root}/scripts/cloudwatch-agent-config.json"
+    destination = "/tmp/cloudwatch-agent-config.json"
+  }
+
   provisioner "shell" {
     script = "${path.root}/scripts/install-ollama.sh"
   }

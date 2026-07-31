@@ -64,4 +64,19 @@ sudo cp /tmp/grafana-agent.yaml /etc/grafana-agent.yaml
 echo 'CUSTOM_ARGS="-config.expand-env"' | sudo tee -a /etc/default/grafana-agent
 sudo systemctl enable --now grafana-agent
 
+# CloudWatch Agent isn't in the default Ubuntu APT repo — it's downloaded directly from AWS's own package repository as a .deb file, then started via 
+# its own control script (amazon-cloudwatch-agent-ctl) which creates and manages its systemd service internally
+echo "Installing CloudWatch Agent..."
+wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+rm -f amazon-cloudwatch-agent.deb
+
+echo "Configuring CloudWatch Agent (memory + disk metrics)..."
+sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+sudo cp /tmp/cloudwatch-agent-config.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
 echo "Done!"

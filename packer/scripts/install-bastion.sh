@@ -39,10 +39,15 @@ sudo docker run -d --name prometheus --restart always -p 9090:9090 \
   --web.enable-remote-write-receiver
 
 echo "Setting up Grafana provisioning (Prometheus data source)..."
-sudo mkdir -p /tmp/grafana-provisioning/datasources
-sudo cp /tmp/grafana-datasource.yaml /tmp/grafana-provisioning/datasources/prometheus.yaml
+sudo mkdir -p /etc/grafana-provisioning/datasources
+sudo cp /tmp/grafana-datasource.yaml /etc/grafana-provisioning/datasources/prometheus.yaml
+
+echo "Setting up Grafana dashboard provisioning..."
+sudo mkdir -p /etc/grafana-provisioning/dashboards
+sudo cp /tmp/grafana-dashboard-provider.yaml /etc/grafana-provisioning/dashboards/provider.yaml
+sudo cp /tmp/grafana-dashboard-host-status.json /etc/grafana-provisioning/dashboards/host-status.json
 
 echo "Starting Grafana (host port 3001, since 3000 is taken by AnythingLLM)..."
 sudo docker run -d --name grafana --restart always -p 3001:3000 \
-  -v /tmp/grafana-provisioning:/etc/grafana/provisioning \
+  -v /etc/grafana-provisioning:/etc/grafana/provisioning \
   grafana/grafana

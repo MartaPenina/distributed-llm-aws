@@ -59,6 +59,16 @@ build {
     destination = "/tmp/grafana-datasource.yaml"
   }
 
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-dashboard-provider.yaml"
+    destination = "/tmp/grafana-dashboard-provider.yaml"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-dashboard-host-status.json"
+    destination = "/tmp/grafana-dashboard-host-status.json"
+  }
+
   provisioner "shell" {
     script = "${path.root}/scripts/install-bastion.sh"
   }

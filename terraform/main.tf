@@ -1,9 +1,9 @@
 # Reads the RDS state (separate S3 backend) so CloudWatch alarms
 # in this module can reference the RDS instance identifier as a dimension
-data "terraform_remote_state" "rds" {
+ data "terraform_remote_state" "rds" {
   backend = "s3"
   config = {
-    bucket  = "distributed-llm-aws-tf-state"
+    bucket  = "distributed-llm-aws-tf-state-v2"
     key     = "distributed-llm-aws/rds/terraform.tfstate"
     region  = "eu-central-1"
     profile = "distributed-llm-aws"

@@ -258,6 +258,13 @@ resource "aws_iam_role_policy_attachment" "asg_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# AWS managed policy allows the CloudWatch Agent to publish custom metrics
+# (memory, disk) that AWS doesn't collect natively for EC2
+resource "aws_iam_role_policy_attachment" "asg_cloudwatch" {
+  role       = aws_iam_role.asg.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 resource "aws_iam_instance_profile" "asg" {
   name = "${var.project_name}-${var.environment}-asg-profile"
   role = aws_iam_role.asg.name
