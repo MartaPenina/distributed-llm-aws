@@ -4,18 +4,24 @@
   "metadata": {
     "name": "app-perf-dash",
     "namespace": "default",
-    "uid": "0d74a712-87bc-4460-867c-61675c840d09",
-    "resourceVersion": "1785922129687017",
-    "generation": 7,
-    "creationTimestamp": "2026-08-05T08:52:08Z",
+    "uid": "bd73942b-0a7b-43e4-8234-ace2a5832639",
+    "resourceVersion": "1785934785400991",
+    "generation": 4,
+    "creationTimestamp": "2026-08-05T12:37:17Z",
     "labels": {
-      "grafana.app/deprecatedInternalID": "4262383291981824"
+      "grafana.app/deprecatedInternalID": "4319043290398720"
     },
     "annotations": {
-      "grafana.app/createdBy": "user:ffu6aepu29v5sa",
+      "grafana.app/createdBy": "access-policy:service",
+      "grafana.app/managedBy": "classic-file-provisioning",
+      "grafana.app/managerAllowsEdits": "true",
+      "grafana.app/managerId": "default",
       "grafana.app/saved-from-ui": "Grafana v13.1.2 (7f247b37a4)",
-      "grafana.app/updatedBy": "user:ffu6aepu29v5sa",
-      "grafana.app/updatedTimestamp": "2026-08-05T09:28:49Z"
+      "grafana.app/sourceChecksum": "de45fdf26ad70465aad44ca7d5ea4369",
+      "grafana.app/sourcePath": "/etc/grafana/provisioning/dashboards/app-performance.json",
+      "grafana.app/sourceTimestamp": "1785932592000",
+      "grafana.app/updatedBy": "user:efu9j8leso7i8e",
+      "grafana.app/updatedTimestamp": "2026-08-05T12:59:45Z"
     }
   },
   "spec": {
@@ -554,6 +560,129 @@
             }
           }
         }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Chat Requests Distribution",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "cloudwatch",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "P034F075C744B399F"
+                      },
+                      "spec": {
+                        "dimensions": {},
+                        "expression": "",
+                        "id": "",
+                        "label": "",
+                        "logGroups": [],
+                        "matchExact": false,
+                        "metricEditorMode": 0,
+                        "metricName": "chat_request_per_hour",
+                        "metricQueryType": 0,
+                        "namespace": "AnythingLLM",
+                        "period": "",
+                        "queryLanguage": "CWLI",
+                        "queryMode": "Metrics",
+                        "region": "default",
+                        "sqlExpression": "",
+                        "statistic": "Sum"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "barchart",
+            "version": "13.1.2",
+            "spec": {
+              "options": {
+                "barRadius": 0,
+                "barWidth": 0.97,
+                "fullHighlight": false,
+                "groupWidth": 0.7,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "overflow": "ellipsis",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "orientation": "auto",
+                "showValue": "auto",
+                "stacking": "none",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 0
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "fillOpacity": 80,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "lineWidth": 1,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
       }
     },
     "layout": {
@@ -611,6 +740,19 @@
                 "name": "panel-4"
               }
             }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 16,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              }
+            }
           }
         ]
       }
@@ -621,7 +763,7 @@
     "tags": [],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-30m",
+      "from": "now-3h",
       "to": "now",
       "autoRefresh": "",
       "autoRefreshIntervals": [
