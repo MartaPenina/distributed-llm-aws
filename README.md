@@ -15,8 +15,7 @@ manual configuration.
 | Metrics Collection (agents, DB, infra, app-specific, ALB) | Done | node_exporter + Grafana Agent on LLM hosts; PostgreSQL via RDS Enhanced Monitoring; CloudWatch Agent for memory/disk/procstat; ALB 4xx/5xx/host-count |
 | Dashboards | Done | 4 Grafana dashboards, all provisioning-as-code: Host Status, Service Status, Application Performance, LLM Model Usage, Database Performance & Health |
 | Web Interface for Ollama | Done | AnythingLLM + Ollama 0.3.6 + qwen2.5:3b, served via ALB with a custom HTTPS domain through Cloudflare |
-| CI/CD Integration | Skipped (out of scope for this iteration) | — |
-| Security | Done | Least-privilege IAM roles; Grafana admin password and AnythingLLM auth token both sourced from SSM Parameter Store (never hardcoded); HTTPS for the web chat interface; RDS storage encrypted |
+| CI/CD Integration | Done | Pipeline from Task 1 unchanged; all monitoring config (dashboards, Packer scripts, alerts) committed to Git; deployment of Prometheus/Grafana/AnythingLLM/CloudWatch Agent fully automated via Packer + systemd, no manual steps on the host || Security | Done | Least-privilege IAM roles; Grafana admin password and AnythingLLM auth token both sourced from SSM Parameter Store (never hardcoded); HTTPS for the web chat interface; RDS storage encrypted |
 | AMI Creation (Packer) | Done | bastion and LLM AMIs rebuilt with all fixes baked in; tagged with build date/source/type |
 | CloudWatch/Grafana Alerts (13 required) | Done (13/13) | EC2 CPU/memory/disk (high+low), service liveness, RDS CPU/storage/memory, ALB host-count/4xx/5xx, business metric (chat volume) |
 
