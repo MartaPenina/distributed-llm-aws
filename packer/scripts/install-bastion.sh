@@ -87,12 +87,30 @@ sudo cp /tmp/grafana-dashboard-app-performance.json /etc/grafana-provisioning/da
 sudo cp /tmp/grafana-dashboard-llm-usage.json /etc/grafana-provisioning/dashboards/llm-usage.json
 sudo cp /tmp/grafana-dashboard-db-health.json /etc/grafana-provisioning/dashboards/db-health.json
 
-echo "Starting Grafana (host port 3001, since 3000 is taken by AnythingLLM)..."
-sudo docker run -d --name grafana --restart always -p 3001:3000 \
-  -v /etc/grafana-provisioning:/etc/grafana/provisioning \
-  -e "GF_SECURITY_ADMIN_USER=admin" \
-  -e "GF_SECURITY_ADMIN_PASSWORD=$(aws ssm get-parameter --name /distributed-llm-aws/dev/grafana_admin_password --with-decryption --query 'Parameter.Value' --output text --region eu-central-1)" \
-  grafana/grafana
+echo "Setting up Grafana systemd service (fetches admin password from SSM at boot)..."
+sudo tee /etc/systemd/system/grafana.service > /dev/null <<'SVC'
+[Unit]
+Description=Grafana (Docker)
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/bin/docker rm -f grafana
+ExecStart=/bin/bash -c '\
+  GRAFANA_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/grafana_admin_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  docker run -d --name grafana --restart always -p 3001:3000 \
+    -v /etc/grafana-provisioning:/etc/grafana/provisioning \
+    -e "GF_SECURITY_ADMIN_USER=admin" \
+    -e "GF_SECURITY_ADMIN_PASSWORD=$GRAFANA_PASSWORD" \
+    grafana/grafana'
+
+[Install]
+WantedBy=multi-user.target
+SVC
+sudo systemctl daemon-reload
+sudo systemctl enable --now grafana
 
 echo "Installing CloudWatch Agent..."
 wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
