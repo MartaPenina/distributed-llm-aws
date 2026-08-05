@@ -41,9 +41,11 @@ source "amazon-ebs" "monitoring" {
   }
 
   tags = {
-    Project   = "distributed-llm-aws"
-    ManagedBy = "packer"
-    Type      = "monitoring"
+    Project     = "distributed-llm-aws"
+    ManagedBy   = "packer"
+    Type        = "monitoring"
+    BuildDate   = "{{timestamp}}"
+    BuildSource = "{{build_name}}"
   }
 }
 
@@ -60,6 +62,31 @@ build {
   provisioner "file" {
     source      = "${path.root}/scripts/alertmanager.yml"
     destination = "/tmp/alertmanager.yml"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-datasource.yaml"
+    destination = "/tmp/grafana-datasource.yaml"
+  }
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-datasource-cloudwatch.yaml"
+    destination = "/tmp/grafana-datasource-cloudwatch.yaml"
+  }
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-dashboard-provider.yaml"
+    destination = "/tmp/grafana-dashboard-provider.yaml"
+  }
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-dashboard-host-status.json"
+    destination = "/tmp/grafana-dashboard-host-status.json"
+  }
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-dashboard-service-status.json"
+    destination = "/tmp/grafana-dashboard-service-status.json"
+  }
+  provisioner "file" {
+    source      = "${path.root}/scripts/cloudwatch-agent-config-bastion.json"
+    destination = "/tmp/cloudwatch-agent-config-bastion.json"
   }
 
   provisioner "shell" {

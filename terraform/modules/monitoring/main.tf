@@ -139,6 +139,72 @@ locals {
       }
       alarm_description = "More than 5 5XX errors in 5 minutes"
     }
+    "llm-test-business-chat-requests-high" = {
+      metric_name         = "chat_request_per_hour"
+      namespace           = "AnythingLLM"
+      statistic           = "Maximum"
+      period              = 300
+      evaluation_periods  = 1
+      threshold           = 10
+      comparison_operator = "GreaterThanThreshold"
+      dimensions          = {}
+      alarm_description   = "Business metric: more than 10 chat requests per hour — high usage alert"
+    }
+    "llm-test-ec2-high-memory" = {
+      metric_name         = "mem_used_percent"
+      namespace           = "CWAgent"
+      statistic           = "Average"
+      period              = 300
+      evaluation_periods  = 2
+      threshold           = 85
+      comparison_operator = "GreaterThanThreshold"
+      dimensions          = { AutoScalingGroupName = var.asg_name }
+      alarm_description   = "EC2 memory usage above 85% for 10 minutes"
+    }
+    "llm-test-ec2-low-memory" = {
+      metric_name         = "mem_used_percent"
+      namespace           = "CWAgent"
+      statistic           = "Average"
+      period              = 300
+      evaluation_periods  = 3
+      threshold           = 10
+      comparison_operator = "LessThanThreshold"
+      dimensions          = { AutoScalingGroupName = var.asg_name }
+      alarm_description   = "EC2 memory usage below 10% for 15 minutes — possible stuck/idle instance"
+    }
+    "llm-test-ec2-high-disk-space" = {
+      metric_name         = "disk_used_percent"
+      namespace           = "CWAgent"
+      statistic           = "Average"
+      period              = 300
+      evaluation_periods  = 2
+      threshold           = 85
+      comparison_operator = "GreaterThanThreshold"
+      dimensions          = { AutoScalingGroupName = var.asg_name, path = "/", fstype = "ext4" }
+      alarm_description   = "EC2 disk usage above 85% for 10 minutes"
+    }
+    "llm-test-ec2-low-disk-space" = {
+      metric_name         = "disk_used_percent"
+      namespace           = "CWAgent"
+      statistic           = "Average"
+      period              = 300
+      evaluation_periods  = 2
+      threshold           = 5
+      comparison_operator = "LessThanThreshold"
+      dimensions          = { AutoScalingGroupName = var.asg_name, path = "/", fstype = "ext4" }
+      alarm_description   = "EC2 disk usage suspiciously below 5% — sanity check for monitoring pipeline"
+    }
+    "llm-test-ec2-service-ollama" = {
+      metric_name         = "procstat_lookup_pid_count"
+      namespace           = "CWAgent"
+      statistic           = "Average"
+      period              = 300
+      evaluation_periods  = 2
+      threshold           = 1
+      comparison_operator = "LessThanThreshold"
+      dimensions          = { AutoScalingGroupName = var.asg_name, exe = "ollama", pid_finder = "native" }
+      alarm_description   = "Ollama process not running (pid_count below 1)"
+    }
   }
 }
 

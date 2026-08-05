@@ -3,7 +3,7 @@ set -e
 
 # === Configuration ===
 REGION="eu-central-1"
-BUCKET_NAME="distributed-llm-aws-tf-state"
+BUCKET_NAME="distributed-llm-aws-tf-state-v2"
 DYNAMODB_TABLE="distributed-llm-aws-state-lock"
 IAM_USER="terraform-sa"
 POLICY_NAME="TerraformDistributedLLMPolicy"
@@ -79,8 +79,10 @@ cat > "$POLICY_FILE" <<'POLICY'
     {"Sid": "RDS", "Effect": "Allow", "Action": ["rds:*"], "Resource": "*"},
     {"Sid": "S3", "Effect": "Allow", "Action": ["s3:*"], "Resource": "*"},
     {"Sid": "DynamoDB", "Effect": "Allow", "Action": ["dynamodb:GetItem","dynamodb:PutItem","dynamodb:DeleteItem","dynamodb:DescribeTable","dynamodb:CreateTable","dynamodb:DeleteTable"], "Resource": "*"},
-    {"Sid": "CloudWatch", "Effect": "Allow", "Action": ["cloudwatch:PutMetricAlarm","cloudwatch:DeleteAlarms","cloudwatch:DescribeAlarms","cloudwatch:ListTagsForResource"], "Resource": "*"},
+    {"Sid": "CloudWatch", "Effect": "Allow", "Action": ["cloudwatch:PutMetricAlarm","cloudwatch:DeleteAlarms","cloudwatch:DescribeAlarms","cloudwatch:ListTagsForResource","cloudwatch:TagResource","cloudwatch:UntagResource"], "Resource": "*"},
+    {"Sid": "Lambda", "Effect": "Allow", "Action": ["lambda:CreateFunction","lambda:DeleteFunction","lambda:GetFunction","lambda:GetFunctionConfiguration","lambda:GetFunctionCodeSigningConfig","lambda:UpdateFunctionCode","lambda:UpdateFunctionConfiguration","lambda:AddPermission","lambda:RemovePermission","lambda:GetPolicy","lambda:TagResource","lambda:UntagResource","lambda:ListTags","lambda:ListVersionsByFunction","lambda:PublishVersion","lambda:InvokeFunction","lambda:GetFunctionEventInvokeConfig","lambda:PutFunctionEventInvokeConfig"], "Resource": "*"},
     {"Sid": "CloudWatchLogs", "Effect": "Allow", "Action": ["logs:CreateLogGroup","logs:DeleteLogGroup","logs:DescribeLogGroups","logs:PutRetentionPolicy","logs:TagLogGroup","logs:ListTagsForResource"], "Resource": "*"},
+    {"Sid": "SNS", "Effect": "Allow", "Action": ["sns:CreateTopic","sns:DeleteTopic","sns:Subscribe","sns:Unsubscribe","sns:GetTopicAttributes","sns:SetTopicAttributes","sns:ListTopics","sns:ListSubscriptionsByTopic","sns:GetSubscriptionAttributes","sns:SetSubscriptionAttributes","sns:TagResource","sns:ListTagsForResource"], "Resource": "*"},
     {"Sid": "IAMForUserSelf", "Effect": "Allow", "Action": ["iam:ListAttachedUserPolicies"], "Resource": "arn:aws:iam::*:user/terraform-sa"},
     {"Sid": "SSM", "Effect": "Allow", "Action": ["ssm:PutParameter","ssm:GetParameter","ssm:GetParameters","ssm:DeleteParameter","ssm:DescribeParameters","ssm:AddTagsToResource","ssm:ListTagsForResource"], "Resource": "*"},
     {"Sid": "IAMForInstances", "Effect": "Allow", "Action": ["iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:PassRole","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:ListAttachedRolePolicies","iam:CreateInstanceProfile","iam:DeleteInstanceProfile","iam:GetInstanceProfile","iam:AddRoleToInstanceProfile","iam:RemoveRoleFromInstanceProfile","iam:ListInstanceProfilesForRole","iam:TagRole","iam:ListRoleTags","iam:CreateServiceLinkedRole","iam:ListRolePolicies","iam:PutRolePolicy","iam:GetRolePolicy","iam:DeleteRolePolicy","iam:TagInstanceProfile"], "Resource": "*"}

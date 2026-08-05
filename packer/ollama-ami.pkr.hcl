@@ -41,8 +41,11 @@ source "amazon-ebs" "ollama" {
   }
 
   tags = {
-    Project   = "distributed-llm-aws"
-    ManagedBy = "packer"
+    Project     = "distributed-llm-aws"
+    ManagedBy   = "packer"
+    Type        = "ollama"
+    BuildDate   = "{{timestamp}}"
+    BuildSource = "{{build_name}}"
   }
 }
 

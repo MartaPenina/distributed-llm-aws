@@ -1,6 +1,6 @@
 # Reads the RDS state (separate S3 backend) so CloudWatch alarms
 # in this module can reference the RDS instance identifier as a dimension
- data "terraform_remote_state" "rds" {
+data "terraform_remote_state" "rds" {
   backend = "s3"
   config = {
     bucket  = "distributed-llm-aws-tf-state-v2"
@@ -51,16 +51,16 @@ module "compute" {
   bastion_ami_id                = var.bastion_ami_id
   bastion_instance_profile_name = module.security.bastion_instance_profile_name
   asg_instance_profile_name     = module.security.asg_instance_profile_name
-  ollama_internal_alb_sg_id = module.security.ollama_internal_alb_sg_id
+  ollama_internal_alb_sg_id     = module.security.ollama_internal_alb_sg_id
 }
 
 module "monitoring" {
-  source = "./modules/monitoring"
-  project_name = var.project_name
-  environment  = var.environment
-  alert_email  = var.alert_email
-  asg_name     = module.compute.asg_name
-  db_instance_id = data.terraform_remote_state.rds.outputs.db_instance_id
-  alb_arn_suffix           = module.compute.alb_arn_suffix
-  target_group_arn_suffix  = module.compute.target_group_arn_suffix
+  source                  = "./modules/monitoring"
+  project_name            = var.project_name
+  environment             = var.environment
+  alert_email             = var.alert_email
+  asg_name                = module.compute.asg_name
+  db_instance_id          = data.terraform_remote_state.rds.outputs.db_instance_id
+  alb_arn_suffix          = module.compute.alb_arn_suffix
+  target_group_arn_suffix = module.compute.target_group_arn_suffix
 }

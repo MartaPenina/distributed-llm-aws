@@ -265,6 +265,33 @@ resource "aws_iam_role_policy_attachment" "asg_cloudwatch" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
+# AWS managed policy allows the CloudWatch Agent on bastion to publish
+# custom process metrics (procstat: grafana, prometheus, anythingllm)
+resource "aws_iam_role_policy_attachment" "bastion_cloudwatch" {
+  role       = aws_iam_role.bastion.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# Allows Grafana (running on bastion) to query CloudWatch metrics directly —
+# separate from CloudWatchAgentServerPolicy, which only grants write access
+resource "aws_iam_role_policy" "bastion_cloudwatch_read" {
+  name = "${var.project_name}-${var.environment}-bastion-cloudwatch-read"
+  role = aws_iam_role.bastion.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "cloudwatch:GetMetricData",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:DescribeAlarmsForMetric"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "asg" {
   name = "${var.project_name}-${var.environment}-asg-profile"
   role = aws_iam_role.asg.name

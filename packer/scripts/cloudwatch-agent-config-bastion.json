@@ -1,0 +1,33 @@
+{
+  "metrics": {
+    "namespace": "CWAgent",
+    "metrics_collected": {
+      "mem": {
+        "measurement": ["mem_used_percent"],
+        "metrics_collection_interval": 60
+      },
+      "disk": {
+        "measurement": ["used_percent"],
+        "metrics_collection_interval": 60,
+        "resources": ["/"]
+      },
+      "procstat": [
+        {
+          "exe": "grafana",
+          "measurement": ["cpu_usage", "memory_rss", "pid_count"],
+          "metrics_collection_interval": 60
+        },
+        {
+          "exe": "prometheus",
+          "measurement": ["cpu_usage", "memory_rss", "pid_count"],
+          "metrics_collection_interval": 60
+        },
+        {
+          "exe": "node",
+          "measurement": ["cpu_usage", "memory_rss", "pid_count"],
+          "metrics_collection_interval": 60
+        }
+      ]
+    }
+  }
+}
