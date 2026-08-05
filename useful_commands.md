@@ -428,6 +428,7 @@ free -h
 
 # reinitialize Terraform backend after changing bucket name
 terraform init -reconfigure
+terraform apply -auto-approve
 
 # check why the AnythingLLM systemd service failed to start
 sudo systemctl status anythingllm.service
@@ -447,3 +448,138 @@ sudo systemctl daemon-reload
 sudo systemctl restart anythingllm.service
 # confirm it's now running successfully
 sudo systemctl status anythingllm.service
+
+# bastion-ssm check if Ollama port is being scraped by node_exporter as a service check
+curl -s 'http://localhost:9090/api/v1/query?query=up' | grep -o '"job":"[^"]*"' | sort -u
+
+# store the current RDS endpoint in SSM so it's read dynamically, not hardcoded
+aws ssm put-parameter --name "/distributed-llm-aws/dev/db_endpoint" --value "distributed-llm-aws-dev-postgres.cz82su8y21bl.eu-central-1.rds.amazonaws.com" --type "String" --region eu-central-1 --overwrite
+
+# Ollama Base URL
+
+
+# on bastion, via SSM — list all unique job labels Prometheus currently tracks
+curl -s 'http://localhost:9090/api/v1/query?query=up' | python3 -m json.tool
+
+
+
+### Checking-plan ###
+http://grafana.fault-lens-penina.pp.ua:3001
+
+https://chat.fault-lens-penina.pp.ua
+
+# ==========================================
+# DEMO / VERIFICATION RUNBOOK — Task 2
+# ==========================================
+
+## Загальна логіка перевірки
+Кожен графік у Grafana — це просто візуалізація даних, які реально лежать
+або в Prometheus (зібрані node_exporter/Grafana Agent з LLM-хостів), або
+в CloudWatch (зібрані нативно AWS або CloudWatch Agent). Щоб довести, що
+графік не намальований "з повітря" — завжди можна звірити те саме значення
+напряму через SSM (для Prometheus-даних) або AWS CLI (для CloudWatch-даних).
+
+## Типи панелей — що це і навіщо
+- Gauge (напівкруглий індикатор) — показує ОДНЕ поточне число з кольоровими
+  зонами (зелена/жовта/червона) відносно порогу. Використано для CPU%,
+  Memory%, миттєвого стану.
+- Time series (лінійний графік) — показує ЗМІНУ значення в часі. Використано
+  для трендів (CPU over time, chat requests, RDS CPU).
+- Bar chart (стовпчики) — показує розподіл значень по часових інтервалах.
+  Використано для "Chat Requests Distribution" — видно, коли саме було
+  найбільше навантаження.
+- Stat (велике число) — просте summary-число без графіка. Використано для
+  "Ollama Process Status" (1 = живий, 0 = впав).
+
+---
+
+## 1. Host Status Dashboard / LLM Model Usage — джерело: PROMETHEUS
+Дані йдуть з node_exporter (LLM1/LLM2) через Grafana Agent → Prometheus на bastion.
+
+Підключення до bastion:
+  aws ssm start-session --target <bastion-instance-id> --region eu-central-1
+
+Звірка CPU напряму в Prometheus (без Grafana):
+  curl -s 'http://localhost:9090/api/v1/query?query=100-(avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m]))*100)' | python3 -m json.tool
+
+Звірка, що обидва LLM-хости взагалі присилають дані:
+  curl -s 'http://localhost:9090/api/v1/query?query=up{job="node_exporter"}' | python3 -m json.tool
+
+---
+
+## 2. LLM Model Usage Dashboard (Ollama CPU/Memory/Status) — джерело: CLOUDWATCH (CWAgent)
+Дані йдуть з CloudWatch Agent (procstat) на LLM-хостах, namespace CWAgent.
+
+Список усіх метрик, що реально прийшли в CloudWatch:
+  aws cloudwatch list-metrics --namespace CWAgent --region eu-central-1 --query "Metrics[?contains(MetricName,'procstat')]"
+
+Точне значення CPU процесу ollama_llama_server за останню годину (звірка з gauge):
+  aws cloudwatch get-metric-statistics \
+    --namespace CWAgent --metric-name procstat_cpu_usage \
+    --dimensions Name=exe,Value=ollama Name=process_name,Value=ollama_llama_server Name=AutoScalingGroupName,Value=distributed-llm-aws-dev-asg \
+    --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+    --period 300 --statistics Average --region eu-central-1
+
+---
+
+## 3. Database Performance Dashboard — джерело: CLOUDWATCH (AWS/RDS)
+Нативні RDS-метрики + Enhanced Monitoring.
+
+Перевірка Enhanced Monitoring реально працює (log stream з даними):
+  aws logs describe-log-streams --log-group-name RDSOSMetrics --region eu-central-1
+
+Звірка FreeableMemory напряму (порівняти з gauge в Grafana):
+  aws cloudwatch get-metric-statistics \
+    --namespace AWS/RDS --metric-name FreeableMemory \
+    --dimensions Name=DBInstanceIdentifier,Value=distributed-llm-aws-dev-postgres \
+    --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+    --period 300 --statistics Average --region eu-central-1
+
+---
+
+## 4. Application Performance Dashboard (ALB errors, Healthy Host Count, Chat Requests) — джерело: CLOUDWATCH
+ALB метрики (AWS/ApplicationELB) + кастомна бізнес-метрика (namespace AnythingLLM).
+
+Здорові хости за Ollama target group (звірка з "Healthy Host Count" панеллю):
+  aws elbv2 describe-target-health --target-group-arn arn:aws:elasticloadbalancing:eu-central-1:332250067977:targetgroup/dev-ollama-tg/80c3c3cdecf716ae --region eu-central-1
+
+Chat requests метрика напряму (звірка з bar chart):
+  aws cloudwatch list-metrics --namespace AnythingLLM --region eu-central-1
+
+Генерація нового трафіку для живої демонстрації (напиши повідомлення в чат,
+почекай ~5 хв — cron публікує раз на 5 хв):
+  https://chat.fault-lens-penina.pp.ua
+
+---
+
+## 5. Alerting — довести, що весь ланцюг живий
+Показати робочий CloudWatch alarm end-to-end (CloudWatch → SNS → Lambda → Discord):
+  aws cloudwatch describe-alarms --alarm-names llm-test-business-chat-requests-high --region eu-central-1 --query "MetricAlarms[0].{State:StateValue,Reason:StateReason}"
+
+Список УСІХ 13 alarms і їх поточний стан одним запитом:
+  aws cloudwatch describe-alarms --alarm-name-prefix llm-test --region eu-central-1 --query "MetricAlarms[].{Name:AlarmName,State:StateValue}" --output table
+
+Discord-канал з живою історією сповіщень (показати вручну):
+  https://discord.com/channels/1534155311575859211/1534155313467359486
+
+---
+
+## 6. Provisioning-as-code — доказ "все автоматично, нічого не клацали руками"
+Показати, що після повного knищення й перестворення bastion (нового AMI)
+усе (datasources, 5 dashboards, admin password) з'являється саме, без кліків:
+
+  cat packer/scripts/install-bastion.sh | grep -A2 "Grafana dashboard provisioning"
+  cat packer/bastion-ami.pkr.hcl | grep "provisioner \"file\"" -A2
+
+Живий доказ — на bastion:
+  sudo docker inspect grafana | grep GF_SECURITY_ADMIN_PASSWORD
+  ls /etc/grafana-provisioning/dashboards/
+
+---
+
+## 7. HTTPS / Security
+  https://chat.fault-lens-penina.pp.ua   -> замок в браузері, AUTH_TOKEN просить пароль
+  http://grafana.fault-lens-penina.pp.ua:3001 -> Grafana login screen, admin + SSM-пароль
+
+Перевірка, що паролі не хардкоджені в коді, а тягнуться з SSM:
+  aws ssm get-parameters-by-path --path "/distributed-llm-aws/dev/" --region eu-central-1 --query "Parameters[].Name"
