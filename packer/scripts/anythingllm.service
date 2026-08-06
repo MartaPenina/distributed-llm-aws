@@ -17,11 +17,13 @@ ExecStart=/bin/bash -c '\
   DB_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/db_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
   DB_HOST=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/db_endpoint" --query "Parameter.Value" --output text --region eu-central-1) && \
   ANYTHINGLLM_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/anythingllm_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  JWT_SECRET=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/anythingllm_jwt_secret" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
   PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p 5432 -U llmadmin -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '"'"'anythingllm_db'"'"'" | grep -q 1 || PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p 5432 -U llmadmin -d postgres -c "CREATE DATABASE anythingllm_db;" && \
   docker run -d --name anythingllm --restart always -p 3000:3001 \
     -e DATABASE_URL="postgresql://llmadmin:$DB_PASSWORD@$DB_HOST:5432/anythingllm_db" \
     -e STORAGE_DIR="/app/server/storage" \
     -e AUTH_TOKEN="$ANYTHINGLLM_PASSWORD" \
+    -e JWT_SECRET="$JWT_SECRET" \
     -v anythingllm_storage:/app/server/storage \
     mintplexlabs/anythingllm:pg'
 
