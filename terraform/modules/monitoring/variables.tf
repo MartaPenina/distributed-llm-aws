@@ -37,12 +37,12 @@ variable "db_instance_id" {
   type        = string
 }
 
-variable "alb_arn_suffix" {
-  description = "ALB arn_suffix for CloudWatch alarm dimensions"
+variable "ollama_internal_alb_arn_suffix" {
+  description = "Internal Ollama ALB arn_suffix for CloudWatch alarm dimensions"
   type        = string
 }
 
-variable "target_group_arn_suffix" {
-  description = "Target group arn_suffix for CloudWatch alarm dimensions"
+variable "ollama_internal_target_group_arn_suffix" {
+  description = "Internal Ollama ALB target group arn_suffix for CloudWatch alarm dimensions"
   type        = string
 }

@@ -108,10 +108,10 @@ locals {
       threshold           = 1
       comparison_operator = "LessThanThreshold"
       dimensions = {
-        LoadBalancer = var.alb_arn_suffix
-        TargetGroup  = var.target_group_arn_suffix
+        LoadBalancer = var.ollama_internal_alb_arn_suffix
+        TargetGroup  = var.ollama_internal_target_group_arn_suffix
       }
-      alarm_description = "Fewer than 1 healthy host behind ALB target group"
+      alarm_description = "Fewer than 1 healthy host behind internal Ollama ALB target group"
     }
     "llm-test-elb-medium-4xx-errors" = {
       metric_name         = "HTTPCode_Target_4XX_Count"
@@ -122,7 +122,7 @@ locals {
       threshold           = 10
       comparison_operator = "GreaterThanThreshold"
       dimensions = {
-        LoadBalancer = var.alb_arn_suffix
+        LoadBalancer = var.ollama_internal_alb_arn_suffix
       }
       alarm_description = "More than 10 4XX errors in 5 minutes"
     }
@@ -135,7 +135,7 @@ locals {
       threshold           = 5
       comparison_operator = "GreaterThanThreshold"
       dimensions = {
-        LoadBalancer = var.alb_arn_suffix
+        LoadBalancer = var.ollama_internal_alb_arn_suffix
       }
       alarm_description = "More than 5 5XX errors in 5 minutes"
     }

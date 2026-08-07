@@ -87,6 +87,12 @@ sudo cp /tmp/grafana-dashboard-app-performance.json /etc/grafana-provisioning/da
 sudo cp /tmp/grafana-dashboard-llm-usage.json /etc/grafana-provisioning/dashboards/llm-usage.json
 sudo cp /tmp/grafana-dashboard-db-health.json /etc/grafana-provisioning/dashboards/db-health.json
 
+echo "Setting up Grafana alerting provisioning..."
+sudo mkdir -p /etc/grafana-provisioning/alerting
+sudo cp /tmp/grafana-alert-rules.yaml /etc/grafana-provisioning/alerting/alert-rules.yaml
+sudo cp /tmp/grafana-contact-points.yaml /etc/grafana-provisioning/alerting/contact-points.yaml
+
+
 echo "Setting up Grafana systemd service (fetches admin password from SSM at boot)..."
 sudo tee /etc/systemd/system/grafana.service > /dev/null <<'SVC'
 [Unit]
@@ -100,6 +106,8 @@ RemainAfterExit=yes
 ExecStartPre=-/usr/bin/docker rm -f grafana
 ExecStart=/bin/bash -c '\
   GRAFANA_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/grafana_admin_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  DISCORD_WEBHOOK=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/discord_webhook_url" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  sed -i "s|__DISCORD_WEBHOOK_URL__|$DISCORD_WEBHOOK|" /etc/grafana-provisioning/alerting/contact-points.yaml && \
   docker run -d --name grafana --restart always -p 3001:3000 \
     -v /etc/grafana-provisioning:/etc/grafana/provisioning \
     -e "GF_SECURITY_ADMIN_USER=admin" \

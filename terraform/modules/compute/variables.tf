@@ -4,7 +4,6 @@ variable "public_subnet_ids"    { type = list(string) }
 variable "private_app_subnet_ids" { type = list(string) }
 variable "bastion_sg_id"        { type = string }
 variable "asg_sg_id"            { type = string }
-variable "alb_sg_id"            { type = string }
 variable "vpc_id"               { type = string }
 variable "bastion_instance_type" { type = string }
 variable "asg_instance_type"    { type = string }

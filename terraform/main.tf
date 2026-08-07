@@ -40,7 +40,6 @@ module "compute" {
   private_app_subnet_ids        = module.networking.private_app_subnet_ids
   bastion_sg_id                 = module.security.bastion_sg_id
   asg_sg_id                     = module.security.asg_sg_id
-  alb_sg_id                     = module.security.alb_sg_id
   bastion_instance_type         = var.bastion_instance_type
   asg_instance_type             = var.asg_instance_type
   asg_min_size                  = var.asg_min_size
@@ -61,6 +60,6 @@ module "monitoring" {
   alert_email             = var.alert_email
   asg_name                = module.compute.asg_name
   db_instance_id          = data.terraform_remote_state.rds.outputs.db_instance_id
-  alb_arn_suffix          = module.compute.alb_arn_suffix
-  target_group_arn_suffix = module.compute.target_group_arn_suffix
+  ollama_internal_alb_arn_suffix          = module.compute.ollama_internal_alb_arn_suffix
+  ollama_internal_target_group_arn_suffix = module.compute.ollama_internal_target_group_arn_suffix
 }

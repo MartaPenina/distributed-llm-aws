@@ -1,69 +1,3 @@
-# ── ALB Security Group ───────────────────────────────────────
-resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-${var.environment}-alb-sg"
-  description = "Allow HTTP/HTTPS from internet"
-  vpc_id      = var.vpc_id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = { Name = "${var.project_name}-${var.environment}-alb-sg" }
-}
-
-resource "aws_security_group_rule" "alb_http_80" {
-  type              = "ingress"
-  from_port         = 80
-  to_port           = 80
-  protocol          = "tcp"
-  security_group_id = aws_security_group.alb.id
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "HTTP from internet"
-}
-
-resource "aws_security_group_rule" "alb_https_443" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  security_group_id = aws_security_group.alb.id
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "HTTPS from internet"
-}
-
-resource "aws_security_group_rule" "alb_anythingllm_3000" {
-  type              = "ingress"
-  from_port         = 3000
-  to_port           = 3000
-  protocol          = "tcp"
-  security_group_id = aws_security_group.alb.id
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "AnythingLLM Web UI via ALB"
-}
-
-resource "aws_security_group_rule" "alb_grafana_3001" {
-  type              = "ingress"
-  from_port         = 3001
-  to_port           = 3001
-  protocol          = "tcp"
-  security_group_id = aws_security_group.alb.id
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "Grafana via ALB"
-}
-
-resource "aws_security_group_rule" "alb_from_bastion_11434" {
-  type                     = "ingress"
-  from_port                = 11434
-  to_port                  = 11434
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.alb.id
-  source_security_group_id = aws_security_group.bastion.id
-  description               = "Ollama API from Bastion only (AnythingLLM)"
-}
-
 # ── Bastion Security Group ───────────────────────────────────
 resource "aws_security_group" "bastion" {
   name        = "${var.project_name}-${var.environment}-bastion-sg"
@@ -85,24 +19,24 @@ resource "aws_security_group" "bastion" {
 # classic aws_security_group_rule resource for multi-CIDR rules.
 # Rule verified working — do not delete manually.
 
-resource "aws_security_group_rule" "bastion_from_alb_3000" {
-  type                     = "ingress"
-  from_port                = 3000
-  to_port                  = 3000
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.bastion.id
-  source_security_group_id = aws_security_group.alb.id
-  description               = "AnythingLLM Web UI via ALB"
+resource "aws_security_group_rule" "bastion_anythingllm_3000" {
+  type              = "ingress"
+  from_port         = 3000
+  to_port           = 3000
+  protocol          = "tcp"
+  security_group_id = aws_security_group.bastion.id
+  cidr_blocks       = var.bastion_allowed_cidrs
+  description       = "AnythingLLM Web UI - SoftServe IP ranges only"
 }
 
-resource "aws_security_group_rule" "bastion_from_alb_3001" {
-  type                     = "ingress"
-  from_port                = 3001
-  to_port                  = 3001
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.bastion.id
-  source_security_group_id = aws_security_group.alb.id
-  description               = "Grafana via ALB"
+resource "aws_security_group_rule" "bastion_grafana_3001" {
+  type              = "ingress"
+  from_port         = 3001
+  to_port           = 3001
+  protocol          = "tcp"
+  security_group_id = aws_security_group.bastion.id
+  cidr_blocks       = var.bastion_allowed_cidrs
+  description       = "Grafana - SoftServe IP ranges only"
 }
 
 resource "aws_security_group_rule" "bastion_from_asg_9090" {
@@ -121,13 +55,6 @@ resource "aws_security_group" "asg" {
   description = "Allow traffic from ALB and Bastion only"
   vpc_id      = var.vpc_id
 
-  ingress {
-    from_port       = 11434
-    to_port         = 11434
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-    description     = "Ollama API from ALB"
-  }
   ingress {
     from_port       = 11434
     to_port         = 11434

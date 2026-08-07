@@ -22,89 +22,6 @@ resource "aws_eip" "bastion" {
   domain   = "vpc"
 }
 
-# ── ALB ──────────────────────────────────────────────────────
-resource "aws_lb" "main" {
-  name               = "${var.project_name}-${var.environment}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [var.alb_sg_id]
-  subnets            = var.public_subnet_ids
-
-  tags = { Name = "${var.project_name}-${var.environment}-alb" }
-}
-
-# ── Target Group ─────────────────────────────────────────────
-resource "aws_lb_target_group" "main" {
-  name     = "${var.project_name}-${var.environment}-tg"
-  port     = 3000
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/"
-    port                = "3000"
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
-    timeout             = 25
-    interval            = 30
-  }
-
-  tags = { Name = "${var.project_name}-${var.environment}-tg" }
-}
-
-# Registers bastion (where Flowise runs) as the target for the Flowise Target Group.
-# Bastion is a single standalone instance (not ASG), so it needs manual attachment.
-resource "aws_lb_target_group_attachment" "bastion_flowise" {
-  target_group_arn = aws_lb_target_group.main.arn
-  target_id        = aws_instance.bastion.id
-  port              = 3000
-}
-
-# Target Group for Grafana (port 3001) — bastion, same pattern as AnythingLLM
-resource "aws_lb_target_group" "grafana" {
-  name     = "${var.environment}-grafana-tg"
-  port     = 3001
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/api/health"
-    port                = "3001"
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
-    timeout             = 25
-    interval            = 30
-  }
-
-  tags = { Name = "${var.project_name}-${var.environment}-grafana-tg" }
-}
-
-resource "aws_lb_target_group_attachment" "bastion_grafana" {
-  target_group_arn = aws_lb_target_group.grafana.arn
-  target_id        = aws_instance.bastion.id
-  port              = 3001
-}
-
-# Separate Target Group for Ollama API (port 11434) — LLM instances,
-resource "aws_lb_target_group" "ollama" {
-  name     = "${var.environment}-ollama-tg"
-  port     = 11434
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/"
-    port                = "11434"
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
-    timeout             = 25
-    interval            = 30
-  }
-
-  tags = { Name = "${var.project_name}-${var.environment}-ollama-tg" }
-}
-
-
 # Target group for Ollama on internal ALB
 resource "aws_lb_target_group" "ollama_internal" {
   name     = "${var.environment}-ollama-int-tg"
@@ -129,42 +46,6 @@ resource "aws_lb_target_group" "ollama_internal" {
   }
 
   tags = { Name = "${var.project_name}-${var.environment}-ollama-internal-tg" }
-}
-
-# ── ALB Listener ─────────────────────────────────────────────
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.main.arn
-  }
-}
-
-# Separate listener — routes external port 11434 traffic to Ollama Target Group.
-resource "aws_lb_listener" "ollama" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 11434
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.ollama.arn
-  }
-}
-
-# Listener — routes external port 3001 traffic (Grafana) to bastion
-resource "aws_lb_listener" "grafana" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 3001
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.grafana.arn
-  }
 }
 
 # Internal ALB for Ollama — routes traffic within VPC only, no public IP
@@ -234,7 +115,6 @@ resource "aws_autoscaling_group" "main" {
   }
 
   target_group_arns = [
-    aws_lb_target_group.ollama.arn,
     aws_lb_target_group.ollama_internal.arn
   ]
 

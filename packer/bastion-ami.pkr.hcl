@@ -97,6 +97,16 @@ build {
   }
 
   provisioner "file" {
+    source      = "${path.root}/scripts/grafana-alert-rules.yaml"
+    destination = "/tmp/grafana-alert-rules.yaml"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-contact-points.yaml"
+    destination = "/tmp/grafana-contact-points.yaml"
+  }
+
+  provisioner "file" {
     source      = "${path.root}/scripts/cloudwatch-agent-config-bastion.json"
     destination = "/tmp/cloudwatch-agent-config-bastion.json"
   }
