@@ -1,4 +1,3 @@
-cat > ~/distributed-llm-aws/README.md << 'EOF'
 # Task 2 — Monitoring & Alerting System — Final Status
 
 ## Overview
