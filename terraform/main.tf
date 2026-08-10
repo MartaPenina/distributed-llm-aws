@@ -28,6 +28,7 @@ module "security" {
   environment           = var.environment
   vpc_id                = module.networking.vpc_id
   bastion_allowed_cidrs = var.bastion_allowed_cidrs
+  route53_zone_id       = module.route53.zone_id
 }
 
 module "compute" {

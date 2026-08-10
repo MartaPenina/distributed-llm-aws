@@ -23,6 +23,10 @@ sudo ./aws/install
 echo "Installing PostgreSQL client..."
 sudo apt install -y postgresql-client
 
+echo "Installing nginx and certbot (for HTTPS reverse proxy)..."
+sudo apt install -y nginx certbot python3-certbot-dns-route53
+sudo rm -f /etc/nginx/sites-enabled/default
+
 echo "Setting up AnythingLLM systemd service..."
 sudo cp /tmp/anythingllm.service /etc/systemd/system/anythingllm.service
 sudo systemctl daemon-reload
@@ -86,12 +90,21 @@ sudo cp /tmp/grafana-dashboard-service-status.json /etc/grafana-provisioning/das
 sudo cp /tmp/grafana-dashboard-app-performance.json /etc/grafana-provisioning/dashboards/app-performance.json
 sudo cp /tmp/grafana-dashboard-llm-usage.json /etc/grafana-provisioning/dashboards/llm-usage.json
 sudo cp /tmp/grafana-dashboard-db-health.json /etc/grafana-provisioning/dashboards/db-health.json
+sudo cp /tmp/grafana-dashboard-llm-load-balancing.json /etc/grafana-provisioning/dashboards/llm-load-balancing.json
 
 echo "Setting up Grafana alerting provisioning..."
 sudo mkdir -p /etc/grafana-provisioning/alerting
 sudo cp /tmp/grafana-alert-rules.yaml /etc/grafana-provisioning/alerting/alert-rules.yaml
 sudo cp /tmp/grafana-contact-points.yaml /etc/grafana-provisioning/alerting/contact-points.yaml
 
+echo "Setting up nginx reverse proxy configs (HTTP-only initially, HTTPS added by certbot service below)..."
+sudo mkdir -p /opt/nginx-ssl-configs
+sudo cp /tmp/nginx-chat-ssl.conf /opt/nginx-ssl-configs/nginx-chat-ssl.conf
+sudo cp /tmp/nginx-grafana-ssl.conf /opt/nginx-ssl-configs/nginx-grafana-ssl.conf
+sudo cp /tmp/nginx-chat.conf /etc/nginx/sites-available/chat.fault-lens-penina.pp.ua
+sudo cp /tmp/nginx-grafana.conf /etc/nginx/sites-available/grafana.fault-lens-penina.pp.ua
+sudo ln -sf /etc/nginx/sites-available/chat.fault-lens-penina.pp.ua /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/grafana.fault-lens-penina.pp.ua /etc/nginx/sites-enabled/
 
 echo "Setting up Grafana systemd service (fetches admin password from SSM at boot)..."
 sudo tee /etc/systemd/system/grafana.service > /dev/null <<'SVC'
@@ -119,6 +132,29 @@ WantedBy=multi-user.target
 SVC
 sudo systemctl daemon-reload
 sudo systemctl enable --now grafana
+
+echo "Setting up certbot systemd service (obtains/renews cert via Route53 DNS challenge at boot)..."
+sudo tee /etc/systemd/system/certbot-init.service > /dev/null <<'SVC'
+[Unit]
+Description=Obtain/renew Let's Encrypt cert via Route53 DNS challenge and enable HTTPS in nginx
+After=network-online.target nginx.service
+Requires=nginx.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c '\
+  certbot certonly --non-interactive --agree-tos -m marta.penina.academic@gmail.com \
+    --dns-route53 -d chat.fault-lens-penina.pp.ua -d grafana.fault-lens-penina.pp.ua && \
+  cp /opt/nginx-ssl-configs/nginx-chat-ssl.conf /etc/nginx/sites-available/chat.fault-lens-penina.pp.ua && \
+  cp /opt/nginx-ssl-configs/nginx-grafana-ssl.conf /etc/nginx/sites-available/grafana.fault-lens-penina.pp.ua && \
+  nginx -s reload'
+
+[Install]
+WantedBy=multi-user.target
+SVC
+sudo systemctl daemon-reload
+sudo systemctl enable certbot-init
 
 echo "Installing CloudWatch Agent..."
 wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb

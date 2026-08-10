@@ -39,6 +39,26 @@ resource "aws_security_group_rule" "bastion_grafana_3001" {
   description       = "Grafana - SoftServe IP ranges only"
 }
 
+resource "aws_security_group_rule" "bastion_https_443" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = aws_security_group.bastion.id
+  cidr_blocks       = var.bastion_allowed_cidrs
+  description       = "HTTPS - SoftServe IP ranges only"
+}
+
+resource "aws_security_group_rule" "bastion_http_80" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = aws_security_group.bastion.id
+  cidr_blocks       = var.bastion_allowed_cidrs
+  description       = "HTTP redirect to HTTPS - SoftServe IP ranges only"
+}
+
 resource "aws_security_group_rule" "bastion_from_asg_9090" {
   type                     = "ingress"
   from_port                = 9090
@@ -216,6 +236,31 @@ resource "aws_iam_role_policy" "bastion_cloudwatch_read" {
       ]
       Resource = "*"
     }]
+  })
+}
+
+resource "aws_iam_role_policy" "bastion_route53_dns_challenge" {
+  name = "${var.project_name}-${var.environment}-bastion-route53-dns-challenge"
+  role = aws_iam_role.bastion.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["route53:GetChange"]
+        Resource = "arn:aws:route53:::change/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["route53:ChangeResourceRecordSets", "route53:ListResourceRecordSets"]
+        Resource = "arn:aws:route53:::hostedzone/${var.route53_zone_id}"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["route53:ListHostedZones", "route53:ListHostedZonesByName"]
+        Resource = "*"
+      }
+    ]
   })
 }
 

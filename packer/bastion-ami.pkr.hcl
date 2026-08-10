@@ -121,6 +121,31 @@ build {
     destination = "/tmp/chat-request-metric.sh"
   }
 
+  provisioner "file" {
+    source      = "${path.root}/scripts/nginx-chat.conf"
+    destination = "/tmp/nginx-chat.conf"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/nginx-grafana.conf"
+    destination = "/tmp/nginx-grafana.conf"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/nginx-chat-ssl.conf"
+    destination = "/tmp/nginx-chat-ssl.conf"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/nginx-grafana-ssl.conf"
+    destination = "/tmp/nginx-grafana-ssl.conf"
+  }
+
+  provisioner "file" {
+    source      = "${path.root}/scripts/grafana-dashboard-llm-load-balancing.json"
+    destination = "/tmp/grafana-dashboard-llm-load-balancing.json"
+  }
+
   provisioner "shell" {
     script = "${path.root}/scripts/install-bastion.sh"
   }
