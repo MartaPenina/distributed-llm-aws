@@ -4,24 +4,24 @@
   "metadata": {
     "name": "app-perf-dash",
     "namespace": "default",
-    "uid": "bd73942b-0a7b-43e4-8234-ace2a5832639",
-    "resourceVersion": "1785934785400991",
+    "uid": "dc7656e3-d3c9-4546-b22e-6e64adba8d8a",
+    "resourceVersion": "1786356552291982",
     "generation": 4,
-    "creationTimestamp": "2026-08-05T12:37:17Z",
+    "creationTimestamp": "2026-08-10T07:58:48Z",
     "labels": {
-      "grafana.app/deprecatedInternalID": "4319043290398720"
+      "grafana.app/deprecatedInternalID": "1557299239518208"
     },
     "annotations": {
       "grafana.app/createdBy": "access-policy:service",
       "grafana.app/managedBy": "classic-file-provisioning",
       "grafana.app/managerAllowsEdits": "true",
       "grafana.app/managerId": "default",
-      "grafana.app/saved-from-ui": "Grafana v13.1.2 (7f247b37a4)",
-      "grafana.app/sourceChecksum": "de45fdf26ad70465aad44ca7d5ea4369",
+      "grafana.app/saved-from-ui": "Grafana v13.1.3 (45a27d64b6)",
+      "grafana.app/sourceChecksum": "60bb1961b8b822e3ad24473a49fbcb6b",
       "grafana.app/sourcePath": "/etc/grafana/provisioning/dashboards/app-performance.json",
-      "grafana.app/sourceTimestamp": "1785932592000",
-      "grafana.app/updatedBy": "user:efu9j8leso7i8e",
-      "grafana.app/updatedTimestamp": "2026-08-05T12:59:45Z"
+      "grafana.app/sourceTimestamp": "1786347991000",
+      "grafana.app/updatedBy": "user:afuqpvzup02yof",
+      "grafana.app/updatedTimestamp": "2026-08-10T10:09:12Z"
     }
   },
   "spec": {
@@ -73,7 +73,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "LoadBalancer": "app/distributed-llm-aws-dev-alb/ddd7fe6f1d567524"
+                          "LoadBalancer": "app/dev-ollama-internal-alb/0ed47e7c2c6c94f2"
                         },
                         "label": "",
                         "metricEditorMode": 0,
@@ -97,7 +97,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.2",
+            "version": "13.1.3",
             "spec": {
               "options": {
                 "annotations": {
@@ -201,7 +201,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "LoadBalancer": "app/distributed-llm-aws-dev-alb/ddd7fe6f1d567524"
+                          "LoadBalancer": "app/dev-ollama-internal-alb/0ed47e7c2c6c94f2"
                         },
                         "label": "",
                         "metricEditorMode": 0,
@@ -225,7 +225,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.2",
+            "version": "13.1.3",
             "spec": {
               "options": {
                 "annotations": {
@@ -329,8 +329,8 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "LoadBalancer": "app/distributed-llm-aws-dev-alb/ddd7fe6f1d567524",
-                          "TargetGroup": "targetgroup/dev-ollama-tg/80c3c3cdecf716ae"
+                          "LoadBalancer": "app/dev-ollama-internal-alb/0ed47e7c2c6c94f2",
+                          "TargetGroup": "targetgroup/dev-ollama-int-tg/4ac279c0063fe706"
                         },
                         "label": "",
                         "metricEditorMode": 0,
@@ -354,7 +354,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.2",
+            "version": "13.1.3",
             "spec": {
               "options": {
                 "annotations": {
@@ -480,7 +480,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.2",
+            "version": "13.1.3",
             "spec": {
               "options": {
                 "annotations": {
@@ -613,7 +613,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "barchart",
-            "version": "13.1.2",
+            "version": "13.1.3",
             "spec": {
               "options": {
                 "barRadius": 0,
