@@ -63,3 +63,8 @@ module "monitoring" {
   ollama_internal_alb_arn_suffix          = module.compute.ollama_internal_alb_arn_suffix
   ollama_internal_target_group_arn_suffix = module.compute.ollama_internal_target_group_arn_suffix
 }
+
+module "route53" {
+  source            = "./modules/route53"
+  bastion_public_ip = module.compute.bastion_public_ip
+}
