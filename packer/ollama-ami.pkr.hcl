@@ -62,6 +62,11 @@ build {
     destination = "/tmp/cloudwatch-agent-config.json"
   }
 
+  provisioner "file" {
+    source      = "${path.root}/scripts/ollama-request-metric.sh"
+    destination = "/tmp/ollama-request-metric.sh"
+  }
+
   provisioner "shell" {
     script = "${path.root}/scripts/install-ollama.sh"
   }

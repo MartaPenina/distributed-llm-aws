@@ -16,6 +16,13 @@ echo "Installing Docker..."
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker ubuntu
 
+echo "Installing AWS CLI..."
+sudo apt update
+sudo apt install -y unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+sudo ./aws/install
+
 echo "Starting Ollama container (v0.3.6)..."
 sudo docker run -d --name ollama --restart always -p 11434:11434 -e OLLAMA_HOST=0.0.0.0 -v ollama:/root/.ollama ollama/ollama:0.3.6
 
@@ -78,5 +85,10 @@ sudo cp /tmp/cloudwatch-agent-config.json /opt/aws/amazon-cloudwatch-agent/etc/a
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config -m ec2 -s \
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+echo "Setting up per-instance chat request metric cron job..."
+sudo cp /tmp/ollama-request-metric.sh /usr/local/bin/ollama-request-metric.sh
+sudo chmod +x /usr/local/bin/ollama-request-metric.sh
+echo "*/5 * * * * root /usr/local/bin/ollama-request-metric.sh >> /var/log/ollama-request-metric.log 2>&1" | sudo tee /etc/cron.d/ollama-request-metric
 
 echo "Done!"
