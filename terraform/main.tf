@@ -3,7 +3,7 @@
 data "terraform_remote_state" "rds" {
   backend = "s3"
   config = {
-    bucket  = "distributed-llm-aws-tf-state-v2"
+    bucket  = "distributed-llm-aws-tf-state-v2-new"
     key     = "distributed-llm-aws/rds/terraform.tfstate"
     region  = "eu-central-1"
     profile = "distributed-llm-aws"
@@ -55,12 +55,12 @@ module "compute" {
 }
 
 module "monitoring" {
-  source                  = "./modules/monitoring"
-  project_name            = var.project_name
-  environment             = var.environment
-  alert_email             = var.alert_email
-  asg_name                = module.compute.asg_name
-  db_instance_id          = data.terraform_remote_state.rds.outputs.db_instance_id
+  source                                  = "./modules/monitoring"
+  project_name                            = var.project_name
+  environment                             = var.environment
+  alert_email                             = var.alert_email
+  asg_name                                = module.compute.asg_name
+  db_instance_id                          = data.terraform_remote_state.rds.outputs.db_instance_id
   ollama_internal_alb_arn_suffix          = module.compute.ollama_internal_alb_arn_suffix
   ollama_internal_target_group_arn_suffix = module.compute.ollama_internal_target_group_arn_suffix
 }

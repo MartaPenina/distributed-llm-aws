@@ -13,8 +13,8 @@ resource "aws_instance" "bastion" {
   key_name                    = aws_key_pair.main.key_name
   associate_public_ip_address = true
   private_ip                  = "10.0.0.5"
-  tags = { Name = "bastion" }
-  iam_instance_profile = var.bastion_instance_profile_name
+  tags                        = { Name = "bastion" }
+  iam_instance_profile        = var.bastion_instance_profile_name
 }
 
 resource "aws_eip" "bastion" {
@@ -53,7 +53,7 @@ resource "aws_lb" "ollama_internal" {
   name               = "${var.environment}-ollama-internal-alb"
   internal           = true
   load_balancer_type = "application"
-  security_groups = [var.ollama_internal_alb_sg_id]
+  security_groups    = [var.ollama_internal_alb_sg_id]
   subnets            = var.private_app_subnet_ids
 
   # LLM inference can take 60-120s — increase idle timeout to prevent disconnects
@@ -97,7 +97,7 @@ resource "aws_launch_template" "main" {
 
   tag_specifications {
     resource_type = "instance"
-    tags = { Name = "${var.project_name}-${var.environment}-llm-instance" }
+    tags          = { Name = "${var.project_name}-${var.environment}-llm-instance" }
   }
 }
 

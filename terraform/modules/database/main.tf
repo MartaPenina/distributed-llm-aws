@@ -38,13 +38,13 @@ resource "aws_db_instance" "postgres" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [var.rds_sg_id]
 
-  multi_az               = false
-  publicly_accessible    = false
+  multi_az                  = false
+  publicly_accessible       = false
   skip_final_snapshot       = false
   final_snapshot_identifier = "${var.project_name}-${var.environment}-final-snapshot"
   deletion_protection       = true
-  monitoring_interval = 60
-  monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn
+  monitoring_interval       = 60
+  monitoring_role_arn       = aws_iam_role.rds_enhanced_monitoring.arn
 
   tags = { Name = "${var.project_name}-${var.environment}-postgres" }
 

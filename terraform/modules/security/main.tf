@@ -66,7 +66,7 @@ resource "aws_security_group_rule" "bastion_from_asg_9090" {
   protocol                 = "tcp"
   security_group_id        = aws_security_group.bastion.id
   source_security_group_id = aws_security_group.asg.id
-  description               = "Prometheus remote_write from LLM instances (Grafana Agent)"
+  description              = "Prometheus remote_write from LLM instances (Grafana Agent)"
 }
 
 # ── ASG Security Group ───────────────────────────────────────

@@ -50,7 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "generated" {
   for_each            = var.cloudwatch_alarms
   alarm_name          = each.key
   comparison_operator = each.value.comparison_operator
-  evaluation_periods   = each.value.evaluation_periods
+  evaluation_periods  = each.value.evaluation_periods
   metric_name         = each.value.metric_name
   namespace           = each.value.namespace
   period              = each.value.period
@@ -209,17 +209,17 @@ locals {
 }
 
 resource "aws_cloudwatch_metric_alarm" "additional" {
-  for_each             = local.additional_alarms
-  alarm_name           = each.key
-  comparison_operator  = each.value.comparison_operator
-  evaluation_periods    = each.value.evaluation_periods
-  metric_name          = each.value.metric_name
-  namespace            = each.value.namespace
-  period               = each.value.period
-  statistic            = each.value.statistic
-  threshold            = each.value.threshold
-  alarm_description    = each.value.alarm_description
-  alarm_actions        = [aws_sns_topic.alerts.arn]
-  ok_actions           = [aws_sns_topic.alerts.arn]
-  dimensions           = each.value.dimensions
+  for_each            = local.additional_alarms
+  alarm_name          = each.key
+  comparison_operator = each.value.comparison_operator
+  evaluation_periods  = each.value.evaluation_periods
+  metric_name         = each.value.metric_name
+  namespace           = each.value.namespace
+  period              = each.value.period
+  statistic           = each.value.statistic
+  threshold           = each.value.threshold
+  alarm_description   = each.value.alarm_description
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+  dimensions          = each.value.dimensions
 }

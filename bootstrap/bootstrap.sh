@@ -3,7 +3,7 @@ set -e
 
 # === Configuration ===
 REGION="eu-central-1"
-BUCKET_NAME="distributed-llm-aws-tf-state-v2"
+BUCKET_NAME="distributed-llm-aws-tf-state-v2-new"
 DYNAMODB_TABLE="distributed-llm-aws-state-lock"
 IAM_USER="terraform-sa"
 POLICY_NAME="TerraformDistributedLLMPolicy"
