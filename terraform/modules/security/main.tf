@@ -170,7 +170,7 @@ resource "aws_iam_role_policy" "bastion_ssm" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["ssm:GetParameter"]
-      Resource = "arn:aws:ssm:*:*:parameter/${var.project_name}/*"
+      Resource = "arn:aws:ssm:*:*:parameter/distributed-llm-aws-v2/*"
     }]
   })
 }

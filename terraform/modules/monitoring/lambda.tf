@@ -26,7 +26,7 @@ data "archive_file" "discord_notifier" {
 
 # Reads the Discord webhook URL from SSM at deploy time (not stored in code)
 data "aws_ssm_parameter" "discord_webhook" {
-  name            = "/distributed-llm-aws/dev/discord_webhook_url"
+  name            = "/distributed-llm-aws-v2/dev/discord_webhook_url"
   with_decryption = true
 }
 

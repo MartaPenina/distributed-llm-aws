@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "aws_profile" {
   description = "AWS CLI profile"
   type        = string
-  default     = "distributed-llm-aws"
+  default     = "distributed-llm-aws-v2"
 }
 
 variable "environment" {
@@ -19,7 +19,7 @@ variable "environment" {
 variable "project_name" {
   description = "Project name for naming and tagging"
   type        = string
-  default     = "distributed-llm-aws"
+  default     = "distributed-llm-aws-v2"
 }
 
 variable "vpc_cidr" {

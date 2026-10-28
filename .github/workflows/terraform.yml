@@ -1,244 +1,95 @@
 name: Terraform
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - "lambda/**"
-      - ".github/workflows/terraform.yml"
   push:
     branches: [main]
-    paths:
-      - "terraform/**"
-      - "lambda/**"
-      - ".github/workflows/terraform.yml"
+    paths: ["terraform/**", "lambda/**", ".github/workflows/terraform.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["terraform/**", "lambda/**", ".github/workflows/terraform.yml"]
   workflow_dispatch:
-
-permissions:
-  contents: read
 
 env:
   TF_VERSION: "1.12.2"
-  TFLINT_VERSION: "v0.58.0"
-  TF_IN_AUTOMATION: "true"
-  TF_INPUT: "false"
   AWS_REGION: eu-central-1
-  AWS_PROFILE_NAME: distributed-llm-aws
-  TF_DIR: terraform
+  AWS_PROFILE_NAME: distributed-llm-aws-v2
 
 jobs:
   validate:
-    name: Validate
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.TF_DIR }}
+    defaults: { run: { working-directory: terraform } }
     steps:
       - uses: actions/checkout@v4
-
       - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-          terraform_wrapper: false
-
-      - name: terraform fmt
-        run: terraform fmt -check -recursive -diff
-
-      - name: terraform init (no backend)
+        with: { terraform_version: "${{ env.TF_VERSION }}" }
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+      - name: Terraform init
         run: terraform init -backend=false
-
-      - name: terraform validate
-        run: terraform validate -no-color
-
-      - uses: terraform-linters/setup-tflint@v4
-        with:
-          tflint_version: ${{ env.TFLINT_VERSION }}
-
-      - name: tflint
-        run: |
-          tflint --init
-          tflint --recursive --minimum-failure-severity=error -f compact
+      - name: Terraform validate
+        run: terraform validate
 
   plan:
-    name: Plan
     needs: validate
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write        
-      pull-requests: write  
-    outputs:
-      has_changes: ${{ steps.plan.outputs.has_changes }}
-    defaults:
-      run:
-        working-directory: ${{ env.TF_DIR }}
+    defaults: { run: { working-directory: terraform } }
+    env:
+      # Secrets -> Terraform variables (var.alert_email, var.bastion_allowed_cidrs).
+      # Non-secret config is committed in terraform/dev.auto.tfvars.
+      TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+      TF_VAR_bastion_allowed_cidrs: ${{ secrets.BASTION_ALLOWED_CIDRS }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-          terraform_wrapper: false
-
-      - name: Configure AWS credentials (read-only role)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_PLAN_ROLE_ARN }}
-          role-session-name: gha-plan-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Create named AWS profile from OIDC credentials
-        run: |
-          aws configure set aws_access_key_id     "$AWS_ACCESS_KEY_ID"     --profile "$AWS_PROFILE_NAME"
-          aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile "$AWS_PROFILE_NAME"
-          aws configure set aws_session_token     "$AWS_SESSION_TOKEN"     --profile "$AWS_PROFILE_NAME"
-          aws configure set region                "$AWS_REGION"            --profile "$AWS_PROFILE_NAME"
-          aws sts get-caller-identity --profile "$AWS_PROFILE_NAME" --query Arn --output text
-
-      - name: Write tfvars and SSH public key
+        with: { terraform_version: "${{ env.TF_VERSION }}" }
+      # backend.tf and provider.tf use a named AWS profile
+      - name: Configure AWS profile
         env:
-          TFVARS: ${{ secrets.TFVARS }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          printf '%s\n' "$TFVARS" > ci.auto.tfvars
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PUBLIC_KEY" > ~/.ssh/id_ed25519.pub
-
-      - name: terraform init
-        run: terraform init -lockfile=readonly
-
-      - name: terraform plan
-        id: plan
-        run: |
-          set +e
-          terraform plan -no-color -lock-timeout=5m -detailed-exitcode -out=tfplan
-          code=$?
-          set -e
-          if [ "$code" -eq 1 ]; then exit 1; fi
-          if [ "$code" -eq 2 ]; then echo "has_changes=true" >> "$GITHUB_OUTPUT"; else echo "has_changes=false" >> "$GITHUB_OUTPUT"; fi
-          terraform show -no-color tfplan > plan.txt
-
-      - name: Plan → job summary
-        run: |
-          {
-            echo "## Terraform plan — \`${GITHUB_SHA::7}\`"
-            echo "Changes: **${{ steps.plan.outputs.has_changes }}**"
-            echo '```'
-            head -c 60000 plan.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Plan → PR comment
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const plan = fs.readFileSync('${{ env.TF_DIR }}/plan.txt', 'utf8');
-            const body = [
-              '### Terraform plan',
-              `Commit: \`${context.sha.substring(0, 7)}\` · changes: **${{ steps.plan.outputs.has_changes }}**`,
-              '<details><summary>Show plan</summary>',
-              '',
-              '```',
-              plan.length > 60000 ? plan.substring(0, 60000) + '\n... (truncated, see job summary)' : plan,
-              '```',
-              '</details>',
-            ].join('\n');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body,
-            });
-
-      - name: Encrypt and bundle plan
-        if: steps.plan.outputs.has_changes == 'true' && github.event_name != 'pull_request'
-        env:
-          PLAN_ENCRYPTION_KEY: ${{ secrets.PLAN_ENCRYPTION_KEY }}
-        run: |
-          tar -czf plan-bundle.tgz tfplan -C .. lambda/discord_notifier.zip
-          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
-              --passphrase "$PLAN_ENCRYPTION_KEY" -o plan-bundle.tgz.gpg plan-bundle.tgz
-          rm -f plan-bundle.tgz
-
-      - name: Upload plan artifact
-        if: steps.plan.outputs.has_changes == 'true' && github.event_name != 'pull_request'
+          aws configure set aws_access_key_id "$KEY_ID" --profile "$AWS_PROFILE_NAME"
+          aws configure set aws_secret_access_key "$SECRET_KEY" --profile "$AWS_PROFILE_NAME"
+          aws configure set region "$AWS_REGION" --profile "$AWS_PROFILE_NAME"
+      - name: Terraform init
+        run: terraform init
+      - name: Terraform plan
+        run: terraform plan -out=tfplan
+      # Saved plan + Lambda zip built during plan, so apply uses exactly what was reviewed
+      - name: Upload plan
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ github.sha }}
-          path: ${{ env.TF_DIR }}/plan-bundle.tgz.gpg
-          retention-days: 3
-          if-no-files-found: error
+          name: tfplan
+          path: |
+            terraform/tfplan
+            lambda/discord_notifier.zip
+          retention-days: 1
 
   apply:
-    name: Apply
     needs: plan
-    if: >-
-      github.ref == 'refs/heads/main' &&
-      github.event_name != 'pull_request' &&
-      needs.plan.outputs.has_changes == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Manual approval: Settings -> Environments -> production -> Required reviewers
     environment: production
-    concurrency:
-      group: terraform-apply-main
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      id-token: write
-    defaults:
-      run:
-        working-directory: ${{ env.TF_DIR }}
+    defaults: { run: { working-directory: terraform } }
     steps:
-      - uses: actions/checkout@v4   
-
+      - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-          terraform_wrapper: false
-
-      - name: Configure AWS credentials (apply role)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_APPLY_ROLE_ARN }}
-          role-session-name: gha-apply-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Create named AWS profile from OIDC credentials
-        run: |
-          aws configure set aws_access_key_id     "$AWS_ACCESS_KEY_ID"     --profile "$AWS_PROFILE_NAME"
-          aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile "$AWS_PROFILE_NAME"
-          aws configure set aws_session_token     "$AWS_SESSION_TOKEN"     --profile "$AWS_PROFILE_NAME"
-          aws configure set region                "$AWS_REGION"            --profile "$AWS_PROFILE_NAME"
-
-      - name: terraform init
-        run: terraform init -lockfile=readonly
-
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-${{ github.sha }}
-          path: ${{ env.TF_DIR }}
-
-      - name: Decrypt and unpack plan
+        with: { terraform_version: "${{ env.TF_VERSION }}" }
+      - name: Configure AWS profile
         env:
-          PLAN_ENCRYPTION_KEY: ${{ secrets.PLAN_ENCRYPTION_KEY }}
+          KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          gpg --batch --yes --pinentry-mode loopback --decrypt \
-              --passphrase "$PLAN_ENCRYPTION_KEY" -o plan-bundle.tgz plan-bundle.tgz.gpg
-          tar -xzf plan-bundle.tgz tfplan
-          tar -xzf plan-bundle.tgz -C .. lambda/discord_notifier.zip
-
-      - name: terraform apply
-        run: terraform apply -no-color -lock-timeout=5m tfplan
-
-      - name: Outputs → job summary
-        if: success()
-        run: |
-          {
-            echo "## Applied \`${GITHUB_SHA::7}\`"
-            echo '```'
-            terraform output -no-color
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          aws configure set aws_access_key_id "$KEY_ID" --profile "$AWS_PROFILE_NAME"
+          aws configure set aws_secret_access_key "$SECRET_KEY" --profile "$AWS_PROFILE_NAME"
+          aws configure set region "$AWS_REGION" --profile "$AWS_PROFILE_NAME"
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with: { name: tfplan, path: . }
+      - name: Terraform init
+        run: terraform init
+      # Variables are stored inside the saved plan, no TF_VAR_* needed here
+      - name: Terraform apply
+        run: terraform apply tfplan

@@ -16,7 +16,7 @@ variable "aws_region" {
 }
 
 variable "aws_profile" {
-  default = "distributed-llm-aws"
+  default = "distributed-llm-aws-v2"
 }
 
 variable "base_ami" {
@@ -30,7 +30,7 @@ source "amazon-ebs" "ollama" {
   instance_type = "m7i-flex.large"
   ssh_username  = "ubuntu"
 
-  ami_name        = "distributed-llm-aws-ollama-{{timestamp}}"
+  ami_name        = "distributed-llm-aws-v2-ollama-{{timestamp}}"
   ami_description = "Ubuntu 24.04 with Ollama + qwen2.5:3b + Grafana Agent"
 
   launch_block_device_mappings {
@@ -41,7 +41,7 @@ source "amazon-ebs" "ollama" {
   }
 
   tags = {
-    Project     = "distributed-llm-aws"
+    Project     = "distributed-llm-aws-v2"
     ManagedBy   = "packer"
     Type        = "ollama"
     BuildDate   = "{{timestamp}}"

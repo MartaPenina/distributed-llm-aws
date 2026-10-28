@@ -3,8 +3,8 @@ set -e
 
 # === Configuration ===
 REGION="eu-central-1"
-BUCKET_NAME="distributed-llm-aws-tf-state-v2-new"
-DYNAMODB_TABLE="distributed-llm-aws-state-lock"
+BUCKET_NAME="distributed-llm-aws-v2-tf-state-v2-new"
+DYNAMODB_TABLE="distributed-llm-aws-v2-state-lock"
 IAM_USER="terraform-sa"
 POLICY_NAME="TerraformDistributedLLMPolicy"
 
@@ -139,21 +139,21 @@ else
 
   cat >> ~/.aws/credentials << EOF
 
-[distributed-llm-aws]
+[distributed-llm-aws-v2]
 aws_access_key_id=$ACCESS_KEY
 aws_secret_access_key=$SECRET_KEY
 EOF
 
   cat >> ~/.aws/config << EOF
 
-[profile distributed-llm-aws]
+[profile distributed-llm-aws-v2]
 region=$REGION
 output=json
 EOF
 
   chmod 600 ~/.aws/credentials
   chmod 600 ~/.aws/config
-  echo "Credentials saved under profile [distributed-llm-aws]"
+  echo "Credentials saved under profile [distributed-llm-aws-v2]"
 fi
 
 echo ""
@@ -164,7 +164,7 @@ echo "Lock table:    $DYNAMODB_TABLE"
 echo "IAM user:      $IAM_USER"
 echo ""
 echo "Next steps:"
-echo "  1. Verify: aws sts get-caller-identity --profile distributed-llm-aws"
+echo "  1. Verify: aws sts get-caller-identity --profile distributed-llm-aws-v2"
 echo "  2. Create terraform/backend.tf"
 echo "  3. Run: terraform init"
 echo ""

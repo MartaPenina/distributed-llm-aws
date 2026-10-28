@@ -73,7 +73,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "AutoScalingGroupName": "distributed-llm-aws-dev-asg",
+                          "AutoScalingGroupName": "distributed-llm-aws-v2-dev-asg",
                           "exe": "ollama",
                           "process_name": "ollama_llama_server"
                         },
@@ -182,7 +182,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "AutoScalingGroupName": "distributed-llm-aws-dev-asg",
+                          "AutoScalingGroupName": "distributed-llm-aws-v2-dev-asg",
                           "exe": "ollama",
                           "process_name": "ollama_llama_server"
                         },
@@ -312,7 +312,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "AutoScalingGroupName": "distributed-llm-aws-dev-asg",
+                          "AutoScalingGroupName": "distributed-llm-aws-v2-dev-asg",
                           "exe": "ollama",
                           "process_name": "ollama_llama_server"
                         },
@@ -421,7 +421,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "AutoScalingGroupName": "distributed-llm-aws-dev-asg",
+                          "AutoScalingGroupName": "distributed-llm-aws-v2-dev-asg",
                           "exe": "ollama",
                           "process_name": "ollama_llama_server"
                         },
@@ -551,7 +551,7 @@
                       },
                       "spec": {
                         "dimensions": {
-                          "AutoScalingGroupName": "distributed-llm-aws-dev-asg",
+                          "AutoScalingGroupName": "distributed-llm-aws-v2-dev-asg",
                           "exe": "ollama",
                           "pid_finder": "native"
                         },

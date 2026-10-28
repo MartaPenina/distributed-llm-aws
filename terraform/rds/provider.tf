@@ -14,7 +14,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "distributed-llm-aws"
+      Project     = "distributed-llm-aws-v2"
       Environment = var.environment
       ManagedBy   = "terraform"
     }

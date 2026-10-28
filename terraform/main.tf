@@ -3,10 +3,10 @@
 data "terraform_remote_state" "rds" {
   backend = "s3"
   config = {
-    bucket  = "distributed-llm-aws-tf-state-v2-new"
-    key     = "distributed-llm-aws/rds/terraform.tfstate"
+    bucket  = "distributed-llm-aws-v2-tf-state-v2-new"
+    key     = "distributed-llm-aws-v2/rds/terraform.tfstate"
     region  = "eu-central-1"
-    profile = "distributed-llm-aws"
+    profile = "distributed-llm-aws-v2"
   }
 }
 

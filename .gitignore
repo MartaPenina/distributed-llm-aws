@@ -28,3 +28,4 @@ packer_cache/
 docs/
 local-testing/
 useful_commands.md
+!terraform/dev.auto.tfvars

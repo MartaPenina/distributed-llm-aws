@@ -1,5 +1,5 @@
 ﻿<#
-  deploy.ps1 - повне розгортання distributed-llm-aws на НОВОМУ AWS-акаунті.
+  deploy.ps1 - повне розгортання distributed-llm-aws-v2 на НОВОМУ AWS-акаунті.
 
   Запуск (з кореня репо, PowerShell):
     .\deploy.ps1                         # адмін-ключі в профілі "default"
@@ -10,7 +10,7 @@
   Кроки:
     1. Перевірка інструментів і адмін-креденшелів
     2. S3-бакет для стейту (versioning + block public access + encryption)
-    3. IAM user terraform-sa + policy + ключі -> профіль "distributed-llm-aws"
+    3. IAM user terraform-sa + policy + ключі -> профіль "distributed-llm-aws-v2"
     4. Packer: ollama + bastion AMI (свіжа Ubuntu 24.04), ID пишуться в terraform.tfvars
     5. terraform main (без моніторингу)
     6. terraform rds
@@ -26,8 +26,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 $Region     = "eu-central-1"
-$Bucket     = "distributed-llm-aws-tf-state-v2-new"
-$TfProfile  = "distributed-llm-aws"
+$Bucket     = "distributed-llm-aws-v2-tf-state-v2-new"
+$TfProfile  = "distributed-llm-aws-v2"
 $IamUser    = "terraform-sa"
 $PolicyName = "TerraformDistributedLLMPolicy"
 $Domain     = "fault-lens-penina.pp.ua"

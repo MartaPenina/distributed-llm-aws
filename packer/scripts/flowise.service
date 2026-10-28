@@ -12,10 +12,10 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStartPre=-/usr/bin/docker rm -f flowise
 ExecStart=/bin/bash -c '\
-  DB_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/db_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  DB_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws-v2/dev/db_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
   docker run -d --name flowise --restart always -p 3000:3000 \
     -e DATABASE_TYPE=postgres \
-    -e DATABASE_HOST=distributed-llm-aws-dev-postgres.cd0iooomuaft.eu-central-1.rds.amazonaws.com \
+    -e DATABASE_HOST=distributed-llm-aws-v2-dev-postgres.cd0iooomuaft.eu-central-1.rds.amazonaws.com \
     -e DATABASE_PORT=5432 \
     -e DATABASE_NAME=llmplatform \
     -e DATABASE_USER=llmadmin \

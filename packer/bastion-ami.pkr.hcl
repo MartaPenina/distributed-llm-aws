@@ -11,7 +11,7 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 variable "aws_profile" {
-  default = "distributed-llm-aws"
+  default = "distributed-llm-aws-v2"
 }
 variable "base_ami" {
   default = "ami-08ea642491f096f83"
@@ -24,7 +24,7 @@ source "amazon-ebs" "bastion" {
   instance_type = "m7i-flex.large"
   ssh_username  = "ubuntu"
 
-  ami_name        = "distributed-llm-aws-bastion-{{timestamp}}"
+  ami_name        = "distributed-llm-aws-v2-bastion-{{timestamp}}"
   ami_description = "Ubuntu 24.04 Bastion Host with SSM Agent"
 
   launch_block_device_mappings {
@@ -35,7 +35,7 @@ source "amazon-ebs" "bastion" {
   }
 
   tags = {
-    Project     = "distributed-llm-aws"
+    Project     = "distributed-llm-aws-v2"
     ManagedBy   = "packer"
     Type        = "bastion"
     BuildDate   = "{{timestamp}}"

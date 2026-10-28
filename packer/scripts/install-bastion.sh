@@ -62,7 +62,7 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStartPre=-/usr/bin/docker rm -f alertmanager
 ExecStart=/bin/bash -c '\
-  DISCORD_WEBHOOK=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/discord_webhook_url" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  DISCORD_WEBHOOK=$(aws ssm get-parameter --name "/distributed-llm-aws-v2/dev/discord_webhook_url" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
   sed "s|DISCORD_WEBHOOK_URL_PLACEHOLDER|$DISCORD_WEBHOOK|g" /etc/alertmanager/alertmanager.yml.template | sudo tee /etc/alertmanager/alertmanager.yml > /dev/null && \
   docker run -d --name alertmanager --restart always -p 9093:9093 \
     --network monitoring-net \
@@ -118,8 +118,8 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStartPre=-/usr/bin/docker rm -f grafana
 ExecStart=/bin/bash -c '\
-  GRAFANA_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/grafana_admin_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
-  DISCORD_WEBHOOK=$(aws ssm get-parameter --name "/distributed-llm-aws/dev/discord_webhook_url" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  GRAFANA_PASSWORD=$(aws ssm get-parameter --name "/distributed-llm-aws-v2/dev/grafana_admin_password" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
+  DISCORD_WEBHOOK=$(aws ssm get-parameter --name "/distributed-llm-aws-v2/dev/discord_webhook_url" --with-decryption --query "Parameter.Value" --output text --region eu-central-1) && \
   sed -i "s|__DISCORD_WEBHOOK_URL__|$DISCORD_WEBHOOK|" /etc/grafana-provisioning/alerting/contact-points.yaml && \
   docker run -d --name grafana --restart always -p 3001:3000 \
     -v /etc/grafana-provisioning:/etc/grafana/provisioning \
