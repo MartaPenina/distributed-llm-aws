@@ -15,10 +15,6 @@ asg_desired_size      = 2
 asg_max_size          = 4
 ssh_public_key_path   = "keys/bastion.pub"
 
-db_name           = "llmplatform"
-db_username       = "llmadmin"
-db_password       = "MONEYmatters"
-db_instance_class = "db.t3.micro"
 
 ami_id         = "ami-0f82f32d030e15cd0"
 bastion_ami_id = "ami-050f74d0fb0ff4a02"
